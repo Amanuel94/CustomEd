@@ -3,28 +3,37 @@ using MassTransit;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Classroom.Service.Model;
 using AutoMapper;
-using CustomEd.User.Teacher.Events;
+using CustomEd.User.Student.Events;
 
 namespace CustomEd.Classroom.Service.Consumers
 {
-    ///I think you forgot to replace teacher with student
-    public class TeacherUpdatedEventConsumer : IConsumer<TeacherUpdatedEvent>
+    public class StudentUpdatedEventConsumer : IConsumer<StudentUpdatedEvent>
     {
-        private readonly IGenericRepository<Teacher> _teacherRepository;
+        private readonly IGenericRepository<Student> _studentRepository;
+        private readonly IGenericRepository<Model.Classroom> _classroomRepository;
         private readonly IMapper _mapper;
 
-        public TeacherUpdatedEventConsumer(IGenericRepository<Teacher> teacherRepository, IMapper mapper)
+        public StudentUpdatedEventConsumer(IGenericRepository<Student> StudentRepository, IGenericRepository<Model.Classroom> classroomRepository, IMapper mapper)
         {
-    
-            _teacherRepository = teacherRepository;
+            _studentRepository = StudentRepository;
+            _classroomRepository = classroomRepository;
             _mapper = mapper;   
         }
-        public async Task Consume(ConsumeContext<TeacherUpdatedEvent> context)
+        public async Task Consume(ConsumeContext<StudentUpdatedEvent> context)
         {
-            var teacherUpdatedEvent = context.Message;
-            var teacher = _mapper.Map<Teacher>(teacherUpdatedEvent);
-            teacher.Id = teacherUpdatedEvent.Id; 
-            await _teacherRepository.UpdateAsync(teacher);
+            var StudentUpdatedEvent = context.Message;
+            var Student = _mapper.Map<Student>(StudentUpdatedEvent);
+            Student.Id = StudentUpdatedEvent.Id; 
+            await _studentRepository.UpdateAsync(Student);
+            var student = await _studentRepository.GetAsync(StudentUpdatedEvent.Id);
+            var classrooms = await _classroomRepository.GetAllAsync(x => x.Members.Contains(student));
+            foreach (var classroom in classrooms)
+            {
+                classroom.Members.Remove(student);
+                classroom.Members.Add(student);
+                await _classroomRepository.UpdateAsync(classroom);
+            }
+
             return;
         }
     }

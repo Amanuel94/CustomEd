@@ -1,7 +1,4 @@
-using System.Threading.Tasks;
 using MassTransit;
-using CustomEd.Classroom.Service.Consumers;
-using CustomEd.User.Contracts;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Classroom.Service.Model;
 using AutoMapper;
