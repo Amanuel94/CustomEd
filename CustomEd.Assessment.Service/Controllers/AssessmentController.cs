@@ -6,6 +6,7 @@ using CustomEd.Assessment.Service.Model;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;
+using CustomEd.Shared.Model;
 using CustomEd.Shared.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,15 +50,36 @@ public class AssessmentController: ControllerBase
         {
             var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be created", errors));
-        }
+        }   
 
-        createAssessmentDto.ClassroomId = classRoomId;
+        if(classRoomId != createAssessmentDto.ClassroomId)
+        {
+            return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be created", new List<string> { "Classroom id does not match." }));
+        }
         
         var assessment = _mapper.Map<Model.Assessment>(createAssessmentDto);
         await _assessmentRepository.CreateAsync(assessment);
         var assessmentDto  = _mapper.Map<AssessmentDto>(assessment);
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment created successfully."));
     }
+
+    [HttpPut("publish/{id}")]
+    [Authorize(Policy = "CreatorOnly")]
+    public async Task<ActionResult<SharedResponse<AssessmentDto>>> PublishAssessment(Guid id, Guid classRoomId)
+    {
+        var assessment = await _assessmentRepository.GetAsync(x => x.Id == id && x.Classroom.Id == classRoomId);
+        if (assessment == null)
+        {
+            return NotFound(SharedResponse<AssessmentDto>.Fail("Assessment not found", null));
+        }
+
+        assessment.IsPublished = true;
+        await _assessmentRepository.UpdateAsync(assessment);
+
+        var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
+        return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment published successfully."));
+    }
+    
 
     [HttpGet("{id}")]
     [Authorize(Policy = "MemberOnly")]
@@ -68,6 +90,11 @@ public class AssessmentController: ControllerBase
         {
             return NotFound(SharedResponse<AssessmentDto>.Fail("Assessment not found", null));
         }
+        var userRole  = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+        if(userRole == Role.Student && assessment.IsPublished == false)
+        {
+            return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be retrived", new List<string> { "Assessment is not published." }));
+        }
         var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment retrived successfully."));
     }
@@ -76,8 +103,16 @@ public class AssessmentController: ControllerBase
     [Authorize(Policy = "MemberOnly")]
     public async Task<ActionResult<SharedResponse<List<AssessmentDto>>>> GetAssessmentsByClassroom(Guid classRoomId)
     {
-        var assessments = await _assessmentRepository.GetAllAsync(a => a.Classroom.Id == classRoomId);
-        var assessmentDtos = _mapper.Map<List<AssessmentDto>>(assessments);
+        var userRole  = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+        var allAssessments = await _assessmentRepository.GetAllAsync(a => a.Classroom.Id == classRoomId);
+        var publishedAssessments = allAssessments.Where(a => a.IsPublished == true).ToList();
+        if(userRole == Role.Student)
+        {
+            var dtos = _mapper.Map<List<AssessmentDto>>(publishedAssessments);
+            return Ok(SharedResponse<List<AssessmentDto>>.Success(dtos, "Assessments retrived successfully."));
+        }
+        
+        var assessmentDtos = _mapper.Map<List<AssessmentDto>>(allAssessments);
         return Ok(SharedResponse<List<AssessmentDto>>.Success(assessmentDtos, "Assessments retrived successfully."));
     }
 
@@ -92,10 +127,14 @@ public class AssessmentController: ControllerBase
             var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be updated", errors));
         }
-        updateAssessmentDto.ClassroomId = classRoomId;
+        if(classRoomId != updateAssessmentDto.ClassroomId)
+        {
+            return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be updated", new List<string> { "Classroom id does not match." }));
+        }
         var assessment = _mapper.Map<Model.Assessment>(updateAssessmentDto);
         await _assessmentRepository.UpdateAsync(assessment);
         var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
+
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment updated successfully."));
     
     }
@@ -157,6 +196,15 @@ public class AssessmentController: ControllerBase
     public async Task<ActionResult<SharedResponse<QuestionDto>>> GetQuestion(Guid classRoomId, Guid id)
     {
         var question = await _questionRepository.GetAsync(id);
+        var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+        if (userRole == Role.Student)
+        {
+            var assessment = await _assessmentRepository.GetAsync(question.AssessmentId);
+            if (assessment == null || assessment.IsPublished == false)
+            {
+                return BadRequest(SharedResponse<QuestionDto>.Fail("Question could not be retrived", null ));
+            }
+        }
         if (question == null)
         {
             return NotFound(SharedResponse<QuestionDto>.Fail("Question not found", null));
@@ -231,8 +279,19 @@ public class AssessmentController: ControllerBase
             var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", errors));
         }
-        var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+
         var assessment = await _assessmentRepository.GetAsync(createSubmissionDto.AssessmentId);
+        var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+        if (userRole == Role.Student)
+        {
+            if (assessment == null || assessment.IsPublished == false)
+            {
+                return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", null));
+            }
+        }
+
+        
+        var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
         if (DateTime.UtcNow > assessment.Deadline)
         {
             return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", new List<string> { "Assessment is expired." }));
