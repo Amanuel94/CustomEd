@@ -158,6 +158,25 @@ public class AssessmentController: ControllerBase
         {
             return NotFound(SharedResponse<AssessmentDto>.Fail("Assessment not found", null));
         }
+        
+        // Cascade delete related entities
+        var questions = await _questionRepository.GetAllAsync(q => q.AssessmentId == assessment.Id);
+        foreach (var question in questions)
+        {
+            var answers = await _answerRepository.GetAllAsync(a => a.QuestionId == question.Id);
+            foreach (var answer in answers)
+            {
+                await _answerRepository.RemoveAsync(answer);
+            }
+            await _questionRepository.RemoveAsync(question);
+        }
+
+        var submissions = await _submissionRepository.GetAllAsync(s => s.AssessmentId == assessment.Id);
+        foreach (var submission in submissions)
+        {
+            await _submissionRepository.RemoveAsync(submission);
+        }
+        
         await _assessmentRepository.RemoveAsync(assessment);
         var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment deleted successfully."));
