@@ -23,21 +23,22 @@ public class AssessmentController: ControllerBase
     private readonly IGenericRepository<Answer> _answerRepository;
     private readonly IGenericRepository<Classroom> _classroomRepository;
     private readonly IGenericRepository<Submission> _submissionRepository;
+    private readonly IGenericRepository<Analytics> _analyticsRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IJwtService _jwtService;
     private readonly IMapper _mapper;
 
-
-    public AssessmentController(IGenericRepository<Model.Assessment> assessmentRepository, IGenericRepository<Question> questionRepository, IGenericRepository<Answer> answerRepository, IMapper mapper, IGenericRepository<Classroom> classroomRepository, IGenericRepository<Submission> submissionRepository, IHttpContextAccessor httpContextAccessor, IJwtService jwtService)
+    public AssessmentController(IGenericRepository<Model.Assessment> assessmentRepository, IGenericRepository<Question> questionRepository, IGenericRepository<Answer> answerRepository, IGenericRepository<Classroom> classroomRepository, IGenericRepository<Submission> submissionRepository, IGenericRepository<Analytics> analyticsRepository, IHttpContextAccessor httpContextAccessor, IJwtService jwtService, IMapper mapper)
     {
         _assessmentRepository = assessmentRepository;
         _questionRepository = questionRepository;
         _answerRepository = answerRepository;
-        _mapper = mapper;
         _classroomRepository = classroomRepository;
         _submissionRepository = submissionRepository;
+        _analyticsRepository = analyticsRepository;
         _httpContextAccessor = httpContextAccessor;
         _jwtService = jwtService;
+        _mapper = mapper;
     }
 
     [HttpPost]
@@ -145,6 +146,13 @@ public class AssessmentController: ControllerBase
         await _assessmentRepository.UpdateAsync(assessment);
         var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
 
+        var analytics = await _analyticsRepository.GetAllAsync(a => a.Assessment.Id == assessment.Id);
+        foreach (var analytic in analytics)
+        {
+            analytic.Assessment = assessment;
+            await _analyticsRepository.UpdateAsync(analytic);
+        }
+
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment updated successfully."));
     
     }
@@ -175,6 +183,12 @@ public class AssessmentController: ControllerBase
         foreach (var submission in submissions)
         {
             await _submissionRepository.RemoveAsync(submission);
+        }
+
+        var analytics = await _analyticsRepository.GetAllAsync(a => a.Assessment.Id == assessment.Id);
+        foreach (var analytic in analytics)
+        {
+            await _analyticsRepository.RemoveAsync(analytic);
         }
         
         await _assessmentRepository.RemoveAsync(assessment);
