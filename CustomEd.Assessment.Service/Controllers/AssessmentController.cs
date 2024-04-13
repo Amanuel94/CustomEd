@@ -73,6 +73,16 @@ public class AssessmentController: ControllerBase
             return NotFound(SharedResponse<AssessmentDto>.Fail("Assessment not found", null));
         }
 
+        if (assessment.IsPublished)
+        {
+            return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be published", new List<string> { "Assessment is already published." }));
+        }
+
+        if(assessment.Deadline < DateTime.UtcNow)
+        {
+            return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be published", new List<string> { "Assessment deadline is expired." }));
+        }
+
         assessment.IsPublished = true;
         await _assessmentRepository.UpdateAsync(assessment);
 
