@@ -52,7 +52,7 @@ namespace CustomEd.Announcement.Service.Controllers
 
         [HttpPost]
         [Authorize(policy:"CreatorOnlyPolicy")]
-        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Create(CreateAnnouncementDto dto)
+        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Create(Guid classRoomId, CreateAnnouncementDto dto)
         {
             var createAnnouncementDtoValidator = new CreateAnnouncementDtoValidator(_classRoomRepository);
             var result = await createAnnouncementDtoValidator.ValidateAsync(dto);
@@ -61,6 +61,10 @@ namespace CustomEd.Announcement.Service.Controllers
                 var errors = result.Errors.Select(x => x.ErrorMessage).ToList();
                 BadRequest(SharedResponse<AnnouncementDto>.Fail("Validation Error", errors));
 
+            }
+            if(dto.ClassRoomId != classRoomId)
+            {
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot create announcement in a different classroom", null));
             }
             var announcement = _mapper.Map<Model.Announcement>(dto);
             await _announcementRepository.CreateAsync(announcement);
@@ -71,7 +75,7 @@ namespace CustomEd.Announcement.Service.Controllers
 
         [HttpPut]
         [Authorize(policy:"CreatorOnlyPolicy")]
-        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Update(UpdateAnnouncementDto dto)
+        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Update(Guid classRoomId, UpdateAnnouncementDto dto)
         {
             var updateAnnouncementDtoValidator = new UpdateAnnouncementDtoValidator(_classRoomRepository, _announcementRepository);
             var result = await updateAnnouncementDtoValidator.ValidateAsync(dto);
@@ -81,6 +85,11 @@ namespace CustomEd.Announcement.Service.Controllers
                 return BadRequest(SharedResponse<AnnouncementDto>.Fail("Validation Error", errors));
 
             }
+
+            if(dto.ClassRoomId != classRoomId)
+            {
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot update announcement in a different classroom", null));
+            }
             var announcement = _mapper.Map<Model.Announcement>(dto);
             await _announcementRepository.UpdateAsync(announcement);
             return NoContent();
@@ -88,12 +97,18 @@ namespace CustomEd.Announcement.Service.Controllers
         
         [HttpDelete("{id}")]
         [Authorize(policy:"CreatorOnlyPolicy")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid classRoomId, Guid id)
         {
             var announcement =  await _announcementRepository.GetAsync(id);
             if (announcement == null)
             {
                 return NotFound();
+            }
+            if (classRoomId != announcement.ClassRoom.Id)
+            {
+               
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot remove announcement in a different classroom", null));
+        
             }
             await _announcementRepository.RemoveAsync(announcement);
             return NoContent();

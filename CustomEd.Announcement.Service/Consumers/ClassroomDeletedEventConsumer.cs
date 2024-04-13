@@ -11,12 +11,14 @@ namespace CustomEd.Announcement.Service.Consumers
         private readonly IMapper _mapper;
         private readonly IGenericRepository<ClassRoom> _classRoomRepository;
         private readonly IGenericRepository<Teacher> _teacherRepository;
+        private readonly IGenericRepository<Model.Announcement> _announcementRepository;
 
-        public ClassroomDeletedEventConsumer(IMapper mapper, IGenericRepository<ClassRoom> classRoomRepository, IGenericRepository<Teacher> teacherRepository)
+        public ClassroomDeletedEventConsumer(IMapper mapper, IGenericRepository<ClassRoom> classRoomRepository, IGenericRepository<Teacher> teacherRepository, IGenericRepository<Model.Announcement> announcementRepository)
         {
             _mapper = mapper;
             _classRoomRepository = classRoomRepository;
             _teacherRepository = teacherRepository;
+            _announcementRepository = announcementRepository;
         }
 
         public async Task Consume(ConsumeContext<ClassroomDeletedEvent> context)
@@ -28,6 +30,11 @@ namespace CustomEd.Announcement.Service.Consumers
             }
             await _classRoomRepository.RemoveAsync(classroom);
             await _teacherRepository.RemoveAsync(new Teacher { Id = classroom.CreatorId });
+            var announcements = await _announcementRepository.GetAllAsync(x => x.ClassRoom.Id == classroom.Id);
+            foreach (var announcement in announcements)
+            {
+                await _announcementRepository.RemoveAsync(announcement);
+            }
 
         }
     }

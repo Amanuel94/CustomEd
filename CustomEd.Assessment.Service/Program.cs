@@ -3,6 +3,7 @@ using CustomEd.Assessment.Service.Policies;
 using CustomEd.Shared.Data;
 using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;
+using CustomEd.Shared.RabbitMQ;
 using CustomEd.Shared.Settings;
 using Microsoft.AspNetCore.Authorization;
 
@@ -24,6 +25,7 @@ builder.Services.AddMongo()
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddAuth();
+builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("CreatorOnlyPolicy", policy =>
@@ -36,6 +38,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IAuthorizationHandler, StudentOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, CreatorOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, MemberOnlyPolicy>();
+builder.Services.AddMassTransitWithRabbitMq();
 
 var app = builder.Build();
 
