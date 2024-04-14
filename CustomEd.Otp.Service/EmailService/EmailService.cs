@@ -24,7 +24,7 @@ public class EmailService : IEmailService
     {
         var mailMessage = new MailMessage
         {
-            From = new MailAddress("username@example.com"), // Set your email here
+            From = new MailAddress(_emailSettings.Value.SenderEmail), // Set your email here
             Subject = subject,
             Body = message,
             IsBodyHtml = true,
