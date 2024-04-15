@@ -15,6 +15,7 @@ namespace CustomEd.Otp.Service.Controllers
         private readonly IEmailService _emailService;
         private readonly IOtpService _otpService;
 
+
         public OtpController(IEmailService emailService, IOtpService otpService)
         {
             _emailService = emailService;
@@ -28,10 +29,11 @@ namespace CustomEd.Otp.Service.Controllers
         {
             var userId = sendOtpDto.userId;
             var email = sendOtpDto.Email;
+            var role = sendOtpDto.Role;
 
             try
             {
-                var otp = await _otpService.GenerateOtp(userId);
+                var otp = await _otpService.GenerateOtp(userId, role);
                 string message =
                     $"<div style=\"color: #333333; font-family: Arial, sans-serif; font-size: 16px;\">Dear User,<br><br>"
                     + $"Your one-time password is: <span style=\"color: #ff6600; font-weight: bold;\">{otp}</span>.<br><br>"
@@ -56,18 +58,20 @@ namespace CustomEd.Otp.Service.Controllers
         {
             var userId = verifyOtpDto.userId;
             var otp = verifyOtpDto.Otp;
+            var role = verifyOtpDto.Role;
 
             try
             {
-                var isValid = await _otpService.ValidateOtp(userId, otp);
+                var isValid = await _otpService.ValidateOtp(userId, otp, role);
 
                 if (isValid)
                 {
+                    
                     return Ok(SharedResponse<string>.Success("OTP verified successfully", null));
                 }
                 else
                 {
-                    return BadRequest(SharedResponse<string>.Fail("Invalid OTP", null));
+                    return BadRequest(SharedResponse<string>.Fail("Expired/Invalid OTP", null));
                 }
             }
             catch (System.Exception)
