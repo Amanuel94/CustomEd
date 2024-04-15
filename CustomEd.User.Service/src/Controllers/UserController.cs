@@ -16,13 +16,12 @@ namespace CustomEd.User.Service.Controllers
     public abstract class UserController<T> : ControllerBase where T : Model.User 
     {
         protected readonly IGenericRepository<T> _userRepository; 
-        protected readonly IGenericRepository<Otp> _otpRepository;
         protected readonly IMapper _mapper;
         protected readonly IPasswordHasher _passwordHasher;
         protected readonly IJwtService _jwtService;
         protected readonly IPublishEndpoint _publishEndpoint;
         protected readonly IHttpContextAccessor _httpContextAccessor;
-        public UserController(IGenericRepository<Otp> otpRepository, IGenericRepository<T> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor)
+        public UserController(IGenericRepository<T> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -30,7 +29,6 @@ namespace CustomEd.User.Service.Controllers
             _jwtService = jwtService;
             _publishEndpoint = publishEndpoint;
             _httpContextAccessor = httpContextAccessor;
-            _otpRepository = otpRepository;
         }
     
         [HttpGet]
@@ -75,33 +73,6 @@ namespace CustomEd.User.Service.Controllers
             userDto.Token = token;
 
             return Ok(SharedResponse<UserDto>.Success(userDto, null));
-        }
-
-        [HttpPost("user/verify")]
-        public virtual async Task<ActionResult<SharedResponse<UserDto>>> VerifyUser([FromBody] VerifyUserDto request)
-        {
-            var user = await _userRepository.GetAsync(x => x.Email == request.Email);
-            if(user == null)
-            {
-                return BadRequest(SharedResponse<bool>.Fail("User not found", null));
-            }
-            if(user.IsVerified)
-            {
-                return BadRequest(SharedResponse<bool>.Fail("User already verified", null));
-            }
-            var otp = await _otpRepository.GetAsync(x => x.Email == request.Email);
-            if(otp == null)
-            {
-                return BadRequest(SharedResponse<bool>.Fail("Email not registered", null));
-            }
-            if(otp.OtpCode != request.OtpCode && otp.UpdatedAt.AddMinutes(30) > DateTime.UtcNow)
-            {
-                return BadRequest(SharedResponse<bool>.Fail("Invalid Otp", null));
-            }
-            user.IsVerified = true;
-            await _userRepository.UpdateAsync(user);
-            return Ok(SharedResponse<bool>.Success(true, "User verified successfully"));
-        }
-        
+        }        
     }
 }

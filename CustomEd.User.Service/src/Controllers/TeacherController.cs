@@ -22,7 +22,7 @@ namespace CustomEd.User.Service.Controllers
     [Route("api/user/teacher")]
     public class TeacherController : UserController<Model.Teacher>
     {
-        public TeacherController(IGenericRepository<Otp> otpRepository, IGenericRepository<Model.Teacher> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor) : base(otpRepository, userRepository, mapper, passwordHasher, jwtService, publishEndpoint, httpContextAccessor)
+        public TeacherController(IGenericRepository<Model.Teacher> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor) : base(userRepository, mapper, passwordHasher, jwtService, publishEndpoint, httpContextAccessor)
         {
 
         }
