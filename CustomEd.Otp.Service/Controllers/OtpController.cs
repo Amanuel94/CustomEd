@@ -8,7 +8,6 @@ using OtpNet;
 
 namespace CustomEd.Otp.Service.Controllers
 {
-
     [ApiController]
     [Route("/api/one-time-verification")]
     public class OtpController : ControllerBase
@@ -23,7 +22,9 @@ namespace CustomEd.Otp.Service.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<ActionResult<SharedResponse<string>>> SendOtp([FromBody] SendOtpDto sendOtpDto)
+        public async Task<ActionResult<SharedResponse<string>>> SendOtp(
+            [FromBody] SendOtpDto sendOtpDto
+        )
         {
             var userId = sendOtpDto.userId;
             var email = sendOtpDto.Email;
@@ -31,21 +32,27 @@ namespace CustomEd.Otp.Service.Controllers
             try
             {
                 var otp = await _otpService.GenerateOtp(userId);
-                var message = $"Your one-time password is: {otp}";
-    
+                string message =
+                    $"<div style=\"color: #333333; font-family: Arial, sans-serif; font-size: 16px;\">Dear User,<br><br>"
+                    + $"Your one-time password is: <span style=\"color: #ff6600; font-weight: bold;\">{otp}</span>.<br><br>"
+                    + $"Please use this OTP to complete your transaction.<br><br>"
+                    + $"Thank you,<br>"
+                    + $"CustomEd</div>";
+
                 await _emailService.SendEmailAsync(email, "One-Time Password", message);
-    
                 return Ok(SharedResponse<string>.Success("OTP sent successfully", null));
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
-                
-                return BadRequest(SharedResponse<string>.Fail("Failed to send OTP", null));
+                Console.WriteLine(ex.Message);
+                return BadRequest(SharedResponse<string>.Fail(ex.Message, null));
             }
         }
 
-    [HttpPost("verify")]
-        public async Task<ActionResult<SharedResponse<string>>> VerifyOtp([FromBody] VerifyOtpDto verifyOtpDto)
+        [HttpPost("verify")]
+        public async Task<ActionResult<SharedResponse<string>>> VerifyOtp(
+            [FromBody] VerifyOtpDto verifyOtpDto
+        )
         {
             var userId = verifyOtpDto.userId;
             var otp = verifyOtpDto.Otp;
@@ -70,4 +77,3 @@ namespace CustomEd.Otp.Service.Controllers
         }
     }
 }
-

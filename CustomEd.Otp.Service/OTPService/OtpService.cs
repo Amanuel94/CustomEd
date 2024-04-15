@@ -17,6 +17,11 @@ public class OtpService : IOtpService
         var otpKey = KeyGeneration.GenerateRandomKey(20); 
         var hotp = new Hotp(otpKey);
         var otp = hotp.ComputeHOTP(0); 
+        var prevOtps = await _otpRepository.GetAllAsync(u => u.userId == userId);
+        foreach (var prevOtp in prevOtps)
+        {
+            await _otpRepository.RemoveAsync(prevOtp);
+        }
         await _otpRepository.CreateAsync(new Model.Otp {userId = userId, otp = hotp, Expiration = DateTime.Now.AddMinutes(5)});
         return otp;
     }
