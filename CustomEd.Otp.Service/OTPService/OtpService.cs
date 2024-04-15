@@ -2,21 +2,29 @@ using CustomEd.Shared.Data.Interfaces;
 using OtpNet;
 using CustomEd.Otp.Service.Model;
 using CustomEd.Shared.Model;
+using CustomEd.Otp.Service.Errors;
 
 namespace CustomEd.Otp.Service.OtpService;
 public class OtpService : IOtpService
 {
     private IGenericRepository<Model.Otp> _otpRepository;
-    private readonly IGenericRepository<VerifiedUser> _verifiedUserRepository;
+    private readonly IGenericRepository<Model.User> _userRepository;
 
-    public OtpService(IGenericRepository<Model.Otp> otpRepository, IGenericRepository<VerifiedUser> verifiedUserRepository)
+
+    public OtpService(IGenericRepository<Model.Otp> otpRepository, IGenericRepository<Model.User> userRepository)
     {
         _otpRepository = otpRepository;
-        _verifiedUserRepository = verifiedUserRepository;
+        _userRepository = userRepository;
+        
     }
 
     public  async Task<string> GenerateOtp(Guid userId, Role role)
     {
+        if(await _userRepository.GetAsync(u => u.userId == userId && u.Role == role) == null)
+        {
+            throw new NonUserException();
+        }
+
         var otpKey = KeyGeneration.GenerateRandomKey(20); 
         var hotp = new Hotp(otpKey);
         var otp = hotp.ComputeHOTP(0); 
@@ -46,13 +54,12 @@ public class OtpService : IOtpService
 
 
 
-        await _verifiedUserRepository.CreateAsync(new VerifiedUser {Id = key});        
         await _otpRepository.RemoveAsync(otpEntity);
         return true;
     }
 
-    public async Task<bool> IsVerified(Guid key)
+    public  Task<bool> IsVerified(Guid key)
     {
-        return await _verifiedUserRepository.GetAsync(u => u.Id == key) != null;
+        throw new NotImplementedException();
     }
 }

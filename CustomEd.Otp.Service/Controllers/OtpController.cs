@@ -1,8 +1,10 @@
 using System.Net;
+using CustomEd.Contracts.Otp;
 using CustomEd.Otp.Service.Dtos;
 using CustomEd.Otp.Service.Email.Service;
 using CustomEd.Otp.Service.OtpService;
 using CustomEd.Shared.Response;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using OtpNet;
 
@@ -14,12 +16,14 @@ namespace CustomEd.Otp.Service.Controllers
     {
         private readonly IEmailService _emailService;
         private readonly IOtpService _otpService;
+        private readonly IPublishEndpoint _publishEndpoint;
 
 
-        public OtpController(IEmailService emailService, IOtpService otpService)
+        public OtpController(IEmailService emailService, IOtpService otpService, IPublishEndpoint publishEndpoint)
         {
             _emailService = emailService;
             _otpService = otpService;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpPost("send")]
@@ -30,6 +34,7 @@ namespace CustomEd.Otp.Service.Controllers
             var userId = sendOtpDto.userId;
             var email = sendOtpDto.Email;
             var role = sendOtpDto.Role;
+
 
             try
             {
@@ -67,6 +72,12 @@ namespace CustomEd.Otp.Service.Controllers
                 if (isValid)
                 {
                     
+                    await _publishEndpoint.Publish(new UserVerifiedEvent
+                    {
+                        UserId = userId,
+                        Role = role
+                    });
+
                     return Ok(SharedResponse<string>.Success("OTP verified successfully", null));
                 }
                 else
