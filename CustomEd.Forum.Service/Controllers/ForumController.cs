@@ -38,7 +38,7 @@ namespace CustomEd.Forum.Service.Controllers
         [HttpPost("send-message")]
         public async Task<ActionResult<SharedResponse<MessageDto>>> SendMessage(Guid classRoomId, [FromBody] CreateMessageDto createMessageDto)
         {
-            var validationResult = await new CreateMessageDtoValidator(_userRepository, _classroomRepository).ValidateAsync(createMessageDto);
+            var validationResult = await new CreateMessageDtoValidator(_userRepository, _classroomRepository, _messageRepository).ValidateAsync(createMessageDto);
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
@@ -145,6 +145,19 @@ namespace CustomEd.Forum.Service.Controllers
             }
             var unreadMessagesCount = user.UnreadMessages.Count;
             return Ok(SharedResponse<int>.Success(unreadMessagesCount, "Unread messages count retrieved successfully."));
+        }
+
+        [HttpGet("message-replies")]
+        public async Task<ActionResult<SharedResponse<List<MessageDto>>>> GetMessageReplies(Guid messageId)
+        {
+            var message = await _messageRepository.GetAsync(messageId);
+            if (message == null)
+            {
+                return NotFound(SharedResponse<List<MessageDto>>.Fail(null, new List<string> { "Message not found." }));
+            }
+            var replies = await _messageRepository.GetAllAsync(m => m.ThreadParent == messageId);
+            var replyDtos = _mapper.Map<List<MessageDto>>(replies);
+            return Ok(SharedResponse<List<MessageDto>>.Success(replyDtos, "Replies retrieved successfully."));
         }
     }
 }

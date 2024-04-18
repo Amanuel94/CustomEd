@@ -7,10 +7,12 @@ public class CreateMessageDtoValidator : AbstractValidator<CreateMessageDto>
 {
     private readonly IGenericRepository<User> _userRepository;
     private readonly IGenericRepository<Classroom> _classroomRepository;
-    public CreateMessageDtoValidator(IGenericRepository<User> userRepository, IGenericRepository<Classroom> classroomRepository)
+    private readonly IGenericRepository<Message> _messageRepository;
+    public CreateMessageDtoValidator(IGenericRepository<User> userRepository, IGenericRepository<Classroom> classroomRepository, IGenericRepository<Message> messageRepository)
     {
         _userRepository = userRepository;
         _classroomRepository = classroomRepository;
+        _messageRepository = messageRepository;
 
         RuleFor(x => x.Content)
             .NotEmpty().WithMessage("Content is required.")
@@ -23,6 +25,14 @@ public class CreateMessageDtoValidator : AbstractValidator<CreateMessageDto>
                 var sender = await _userRepository.GetAsync(senderId);
                 return sender != null;
             }).WithMessage("Sender does not exist.");
+        
+        RuleFor(x=> x.ThreadParent)
+            .NotEmpty().WithMessage("ThreadParent is required.")
+            .MustAsync(async (threadParent, cancellationToken) =>
+            {
+                var message = await _messageRepository.GetAsync(threadParent);
+                return message != null;
+            }).WithMessage("ThreadParent does not exist.");
 
         RuleFor(x => x.ClassroomId)
             .NotEmpty().WithMessage("ClassroomId is required.")
