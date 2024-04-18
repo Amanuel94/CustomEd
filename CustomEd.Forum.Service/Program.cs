@@ -1,5 +1,11 @@
 using CustomEd.Forum.Service.Model;
+using CustomEd.Forum.Service.Policies;
 using CustomEd.Shared.Data;
+using CustomEd.Shared.JWT;
+using CustomEd.Shared.JWT.Interfaces;
+using CustomEd.Shared.RabbitMQ;
+using CustomEd.Shared.Settings;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +14,18 @@ builder.Services.AddMongo()
     .AddPersistence<User>("User")
     .AddPersistence<Message>("Message")
     .AddPersistence<Classroom>("Classroom");
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IJwtService, JwtService>();
+builder.Services.AddAuth();
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MemberOnlyPolicy", policy =>
+        policy.Requirements.Add(new MemberOnlyRequirement()));
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, MemberOnlyPolicy>();
+builder.Services.AddMassTransitWithRabbitMq();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
