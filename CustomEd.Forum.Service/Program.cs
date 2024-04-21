@@ -14,6 +14,7 @@ builder.Services.AddMongo()
     .AddPersistence<User>("User")
     .AddPersistence<Message>("Message")
     .AddPersistence<Classroom>("Classroom");
+builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddAuth();
@@ -45,5 +46,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ForumHub>("/forumHub");
 
 app.Run();

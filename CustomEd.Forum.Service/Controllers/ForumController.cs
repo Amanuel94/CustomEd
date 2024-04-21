@@ -8,6 +8,9 @@ using CustomEd.Forum.Service.Dto;
 using Microsoft.AspNetCore.Authorization;
 using CustomEd.Shared.JWT.Interfaces;
 using CustomEd.Shared.JWT;
+using Microsoft.AspNetCore.SignalR;
+using CustomEd.Forum.Service.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace CustomEd.Forum.Service.Controllers
 {
@@ -22,8 +25,10 @@ namespace CustomEd.Forum.Service.Controllers
         private readonly IMapper _mapper;
         private readonly IJwtService _jwtService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHubContext<ForumHub, IForumClient> _forumHub;
+        
 
-        public ForumController(IGenericRepository<Message> messageRepository, IGenericRepository<Model.User> userRepository, IGenericRepository<Classroom> classroomRepository, IMapper mapper, IJwtService jwtService, IHttpContextAccessor httpContextAccessor)
+        public ForumController(IGenericRepository<Message> messageRepository, IGenericRepository<Model.User> userRepository, IGenericRepository<Classroom> classroomRepository, IMapper mapper, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IHubContext<ForumHub, IForumClient> forumHub)
         {
             _messageRepository = messageRepository;
             _userRepository = userRepository;
@@ -31,6 +36,26 @@ namespace CustomEd.Forum.Service.Controllers
             _mapper = mapper;
             _jwtService = jwtService;
             _httpContextAccessor = httpContextAccessor;
+            _forumHub = forumHub;
+        }
+
+        
+        private static async Task SendMessageToGroup(Message message)
+        {
+            try
+            {
+                var connection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5082/forumHub")
+                .Build();
+                await connection.StartAsync();
+                await connection.InvokeAsync("SendMessage", message);
+                await connection.StopAsync();
+                await connection.DisposeAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
         
        
@@ -51,7 +76,9 @@ namespace CustomEd.Forum.Service.Controllers
 
             var message = _mapper.Map<Message>(createMessageDto);
             await _messageRepository.CreateAsync(message);
+            await SendMessageToGroup(message);
 
+            
             var messageDto = _mapper.Map<MessageDto>(message);
             return Ok(SharedResponse<MessageDto>.Success(messageDto, "Message sent successfully."));
             
