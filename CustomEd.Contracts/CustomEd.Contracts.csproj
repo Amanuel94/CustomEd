@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CustomEd.Shared" Version="1.1.6" />
+    <PackageReference Include="CustomEd.Shared" Version="3.0.0" />
   </ItemGroup>
 
 </Project>

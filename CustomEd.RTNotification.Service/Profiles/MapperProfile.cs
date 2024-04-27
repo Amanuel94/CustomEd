@@ -3,10 +3,10 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.User.Teacher.Events;
 using CustomEd.Shared.Model;
 using CustomEd.User.Student.Events;
-using CustomEd.User.Contracts.Teacher.Events;
 using CustomEd.RTNotification.Service.Model;
 using CustomEd.RTNotification.Service.Dto;
 using CustomEd.Contracts.Classroom.Events;
+using CustomEd.Contracts.Notification.Events;
 
 namespace CustomEd.RTNotification.Service.Profiles;
     public class MapperProfile : Profile
@@ -60,6 +60,7 @@ namespace CustomEd.RTNotification.Service.Profiles;
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now));
 
             CreateMap<Notification, NotificationDto>().ReverseMap();
+            CreateMap<NotificationCreatedEvent, Notification>().ReverseMap();
 
         }
 

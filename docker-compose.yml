@@ -13,7 +13,7 @@ services:
 #       - rabbitmq
   mongo:
     image: mongo
-    container_name: customed-mongo-1
+    container_name: customed-mongo-2
     ports:
       - 27017:27017
     volumes:
@@ -21,7 +21,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:management
-    container_name: customed-rabbitmq-1
+    container_name: customed-rabbitmq-2
     ports:
       - 5672:5672
       - 15672:15672

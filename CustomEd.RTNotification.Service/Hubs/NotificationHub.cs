@@ -125,5 +125,23 @@ public class NotificationHub : Hub<INotifcationClient>
         await base.OnDisconnectedAsync(exception);
      }
 
-    public async Task SendNotification(Notification notification) { }
+    public async Task SendNotification(Notification notification) { 
+        var group = await _classroomRepository.GetAsync(notification.ClassroomId);
+        var users = group.Members.Select(x => x.Id).ToList();
+        users.Add(group.Creator.Id);
+        foreach (var user in users)
+        {
+            if (_connections.TryGetValue(user, out var connectionId))
+            {
+                await Clients.Client(connectionId).ReceiveNotification(_mapper.Map<NotificationDto>(notification));
+            }
+            else
+            {
+                var userEntity = await _userRepository.GetAsync(user);
+                userEntity.UnreadNotifications.Add(notification);
+                await _userRepository.UpdateAsync(userEntity);
+            }
+        }
+
+    }
 }

@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
+using CustomEd.RTNotification.Service.Hubs;
 using CustomEd.RTNotification.Service.Model;
 using CustomEd.Shared.Data;
+using CustomEd.Shared.RabbitMQ;
 using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,9 +15,10 @@ builder.Services.AddMongo()
                 .AddPersistence<Notification>("Notification")
                 .AddPersistence<User>("User");
 builder.Services.AddSignalR();
-builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<ConcurrentDictionary<Guid, string>>();
+builder.Services.AddMassTransitWithRabbitMq();
+builder.Services.AddAutoMapper(typeof(Program));
                 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -35,5 +38,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
