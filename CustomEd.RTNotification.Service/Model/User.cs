@@ -10,7 +10,7 @@ public class User : BaseEntity
     public string Email { get; set; } = null!; 
     public string PhoneNumber { get; set; } = null!;    
     public Role Role { get; set; }
-    public List<Notification> UnreadNotifications { get; set; } = null!;
+    public List<Notification?> UnreadNotifications { get; set; } = null!;
     
     public string Key 
     {
