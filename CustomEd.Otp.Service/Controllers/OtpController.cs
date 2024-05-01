@@ -85,8 +85,9 @@ namespace CustomEd.Otp.Service.Controllers
                     return BadRequest(SharedResponse<string>.Fail("Expired/Invalid OTP", null));
                 }
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
+            	 Console.WriteLine(ex.Message);
                 return BadRequest(SharedResponse<string>.Fail("Failed to verify OTP", null));
             }
         }

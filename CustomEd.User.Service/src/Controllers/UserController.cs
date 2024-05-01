@@ -53,10 +53,10 @@ namespace CustomEd.User.Service.Controllers
         public virtual async Task<ActionResult<SharedResponse<UserDto>>> SignIn([FromBody] LoginRequestDto request)
         {
 
-            var user = await _userRepository.GetAsync(x => (x.Email == request.Email && x.IsVerified == true) );
+            var user = await _userRepository.GetAsync(x => x.Email == request.Email && x.IsVerified == true );
             if(user == null)
             {
-                return BadRequest(SharedResponse<UserDto>.Fail("User not found", null));
+                return BadRequest(SharedResponse<UserDto>.Fail("User not found or not verified", null));
             }
             if(!_passwordHasher.VerifyPassword(request.Password, user.Password))
             {

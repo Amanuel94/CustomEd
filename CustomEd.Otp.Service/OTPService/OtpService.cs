@@ -33,21 +33,32 @@ public class OtpService : IOtpService
         {
             await _otpRepository.RemoveAsync(prevOtp);
         }
-        await _otpRepository.CreateAsync(new Model.Otp {userId = userId, otp = hotp, Expiration = DateTime.Now.AddMinutes(5)});
+        Console.WriteLine(DateTime.UtcNow.AddMinutes(10));
+        await _otpRepository.CreateAsync(new Model.Otp {userId = userId, otp = otp, Expiration = DateTime.UtcNow.AddMinutes(10), Role = role});
         return otp;
     }
 
     public async Task<bool> ValidateOtp(Guid key, string otp, Role role)
     {
-        var otpEntity = await _otpRepository.GetAsync(o => o.otp.ComputeHOTP(0) == otp && o.userId == key && o.Role == role);
+        
+
+        foreach (var k in await _otpRepository.GetAllAsync())
+        {
+            Console.WriteLine(DateTime.UtcNow);
+            Console.WriteLine($"{k.otp} ---- {k.userId} ---- {k.Role} -- {k.Expiration}");
+        }
+
+        var otpEntity = await _otpRepository.GetAsync(o => o.otp == otp && o.userId == key && o.Role == role);
 
         if (otpEntity == null)
         {
+            Console.WriteLine("OTP is null");
             return false;
         }
 
-        if (DateTime.Now > otpEntity.Expiration)
+        if (DateTime.UtcNow > otpEntity.Expiration)
         {
+            Console.WriteLine("OTP is expired");
             await _otpRepository.RemoveAsync(otpEntity);
             return false;
         }

@@ -14,4 +14,5 @@ public class TeacherDto
     public Department Department { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsVerified { get; set; }
 }
