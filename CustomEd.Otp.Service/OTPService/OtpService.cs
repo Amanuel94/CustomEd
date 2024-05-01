@@ -33,7 +33,6 @@ public class OtpService : IOtpService
         {
             await _otpRepository.RemoveAsync(prevOtp);
         }
-        Console.WriteLine(DateTime.UtcNow.AddMinutes(10));
         await _otpRepository.CreateAsync(new Model.Otp {userId = userId, otp = otp, Expiration = DateTime.UtcNow.AddMinutes(10), Role = role});
         return otp;
     }
@@ -41,12 +40,6 @@ public class OtpService : IOtpService
     public async Task<bool> ValidateOtp(Guid key, string otp, Role role)
     {
         
-
-        foreach (var k in await _otpRepository.GetAllAsync())
-        {
-            Console.WriteLine(DateTime.UtcNow);
-            Console.WriteLine($"{k.otp} ---- {k.userId} ---- {k.Role} -- {k.Expiration}");
-        }
 
         var otpEntity = await _otpRepository.GetAsync(o => o.otp == otp && o.userId == key && o.Role == role);
 

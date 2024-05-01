@@ -175,6 +175,9 @@ namespace CustomEd.User.Service.Controllers
             var student = _mapper.Map<Model.Student>(studentDto);
             student.Role = Model.Role.Student;
 
+            var oldUser = await _userRepository.GetAsync(student.Id);
+            student.IsVerified = oldUser.IsVerified;
+
             await _userRepository.UpdateAsync(student);
             var studentUpdatedEvent = _mapper.Map<StudentCreatedEvent>(student);
             if (student.IsVerified == true)

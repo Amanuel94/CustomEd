@@ -82,13 +82,15 @@ namespace CustomEd.User.Service.Validators
                 .MaximumLength(100)
                 .WithMessage("Email must not exceed 100 characters.")
                 .EmailAddress()
-                .WithMessage("Invalid email format.")
-                .MustAsync(async (email, cancellation) => 
+                .WithMessage("Invalid email format.");
+            
+            RuleFor(dto => new { dto.Email, dto.Id })
+                .MustAsync(async (data, cancellation) =>
                 {
-                    var existingStudent = await _studentRepository.GetAsync(s => s.Email == email);
-                    return existingStudent == null;
+                    var student = await _studentRepository.GetAsync(s => s.Email == data.Email && s.Id != data.Id);
+                    return student == null;
                 })
-                .WithMessage("Email must be unique.");
+                .WithMessage("Email already exists.");
 
             RuleFor(dto => dto.Password)
                 .NotEmpty()

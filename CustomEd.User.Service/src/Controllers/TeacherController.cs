@@ -28,11 +28,11 @@ namespace CustomEd.User.Service.Controllers
         }
 
         [HttpGet("teacher-name")]
-        public async Task<ActionResult<SharedResponse<TeacherDto>>> SearchTeacherByName([FromQuery] string name)
+        public async Task<ActionResult<SharedResponse<List<TeacherDto>>>> SearchTeacherByName([FromQuery] string name)
         {
-            var teacher = await _userRepository.GetAsync(u => u.IsVerified && (u.FirstName!.Contains(name) || u.LastName!.Contains(name)));
-            var teacherDto = _mapper.Map<TeacherDto>(teacher);
-            return Ok(SharedResponse<TeacherDto>.Success(teacherDto, "Teacher retrieved successfully"));
+            var teacher = await _userRepository.GetAllAsync(u => u.IsVerified == true && (u.FirstName!.Contains(name) || u.LastName!.Contains(name)));
+            var teacherDto = _mapper.Map<List<TeacherDto>>(teacher);
+            return Ok(SharedResponse<List<TeacherDto>>.Success(teacherDto, "Teacher retrieved successfully"));
         }
         [HttpPost]
         public async Task<ActionResult<SharedResponse<TeacherDto>>> CreateUser([FromBody] CreateTeacherDto createTeacherDto)
@@ -96,6 +96,7 @@ namespace CustomEd.User.Service.Controllers
             var currentUserId = identityProvider.GetUserId();
             if (currentUserId != updateTeacherDto.Id)
             {
+
                 return Unauthorized(SharedResponse<TeacherDto>.Fail("Unauthorized to update user", null));
             }
 
@@ -104,6 +105,8 @@ namespace CustomEd.User.Service.Controllers
 
             var user = _mapper.Map<Model.Teacher>(updateTeacherDto);
             user.Role = Model.Role.Teacher;
+            var oldUser = await _userRepository.GetAsync(user.Id);
+            user.IsVerified = oldUser.IsVerified;
             await _userRepository.UpdateAsync(user);
 
             var teacherUpdatedEvent =_mapper.Map<TeacherUpdatedEvent>(user);
