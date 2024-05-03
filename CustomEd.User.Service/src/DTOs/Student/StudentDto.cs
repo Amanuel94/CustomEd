@@ -16,6 +16,7 @@ public class StudentDto
     public string? Section { get; set; }
     public Role Role { get; set; }
     public Department? Department { get; set; }
+    public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsVerified { get; set; }

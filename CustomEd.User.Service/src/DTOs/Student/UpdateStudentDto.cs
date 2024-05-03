@@ -14,6 +14,7 @@ namespace CustomEd.User.Service.DTOs
         public DateOnly JoinDate { get; set; }
         public int? Year { get; set; }
         public string? Section { get; set; }
+        public string? ImageUrl { get; set; }
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
     }

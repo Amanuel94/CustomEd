@@ -73,7 +73,11 @@ namespace CustomEd.User.Service.Validators
                     return student == null;
                 })
                 .WithMessage("Email already exists.");
-
+            
+            RuleFor(dto => dto.ImageUrl)
+                .MaximumLength(200)
+                .WithMessage("Image URL must not exceed 200 characters.");
+                
             RuleFor(dto => dto.Password)
                 .NotEmpty()
                 .WithMessage("Password is required.")

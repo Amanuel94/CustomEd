@@ -15,5 +15,6 @@ namespace CustomEd.User.Service.DTOs
         public string? Section { get; set; }
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
+        public string? ImageUrl {get; set;}
     }
 }
