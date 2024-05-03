@@ -22,7 +22,8 @@ public class OtpService : IOtpService
     {
         if(await _userRepository.GetAsync(u => u.userId == userId && u.Role == role) == null)
         {
-            throw new NonUserException();
+            // should be created asychronously with separate user-created event
+            await _userRepository.CreateAsync(new Model.User {userId = userId, Role = role});
         }
 
         var otpKey = KeyGeneration.GenerateRandomKey(20); 
