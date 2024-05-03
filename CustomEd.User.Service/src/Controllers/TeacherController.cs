@@ -55,7 +55,7 @@ namespace CustomEd.User.Service.Controllers
         await _userRepository.CreateAsync(teacher);
         var teacherCreatedEvent = _mapper.Map<TeacherCreatedEvent>(teacher);
         var dto = _mapper.Map<TeacherDto>(teacher);
-        await _publishEndpoint.Publish(teacherCreatedEvent);
+        // await _publishEndpoint.Publish(teacherCreatedEvent);
         return CreatedAtAction(nameof(GetUserById), new { id = teacher.Id }, SharedResponse<TeacherDto>.Success(dto, "User created successfully"));
             
         }

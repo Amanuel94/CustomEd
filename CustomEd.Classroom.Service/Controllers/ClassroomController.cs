@@ -111,6 +111,11 @@ namespace CustomEd.Classroom.Service.Controllers
             {
                 return BadRequest(SharedResponse<ClassroomDto>.Fail("Invalid input", validationResult.Errors.Select(x => x.ErrorMessage).ToList()));
             }
+            var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+            if(createClassroomDto.CreatorId != currentUserId)
+            {
+                return Unauthorized(SharedResponse<ClassroomDto>.Fail("You are not authorized to create a classroom on behalf of another teacher", null));
+            }
             var classroom = _mapper.Map<Model.Classroom>(createClassroomDto); 
             classroom.Creator = await _teacherRepository.GetAsync(createClassroomDto.CreatorId);
 
@@ -216,12 +221,36 @@ namespace CustomEd.Classroom.Service.Controllers
             }
             var classroom = await _classroomRepository.GetAsync(classroomId);
             var student = await _studentRepository.GetAsync(studentId);
-
+            if(classroom.Members == null)
+            {
+                classroom.Members = new List<Student>();
+            }
             classroom.Members.Add(student);
             await _classroomRepository.UpdateAsync(classroom);
             var memberJoinedEvent = new MemberJoinedEvent { ClassroomId = classroomId, StudentId = studentId };
             await _publishEndpoint.Publish(memberJoinedEvent);
 
+            return Ok(SharedResponse<ClassroomDto>.Success(_mapper.Map<ClassroomDto>(classroom), null));
+        }
+        [Authorize(Policy = "TeacherOnlyPolicy")]
+        [HttpDelete("remove-student")]
+        public async Task<ActionResult<SharedResponse<ClassroomDto>>> RemoveStudent(Guid classroomId, Guid studentId)
+        {
+            var removeStudentDtoValidator = new RemoveStudentDtoValidator(_studentRepository, _classroomRepository);
+            var validationResult = await removeStudentDtoValidator.ValidateAsync(new RemoveStudentDto { ClassroomId = classroomId, StudentId = studentId });
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(SharedResponse<ClassroomDto>.Fail("Invalid input", validationResult.Errors.Select(x => x.ErrorMessage).ToList()));
+            }
+            var classroom = await _classroomRepository.GetAsync(classroomId);
+            var student = await _studentRepository.GetAsync(studentId);
+            if (classroom.Members != null)
+            {
+                classroom.Members.Remove(student);
+            }
+            await _classroomRepository.UpdateAsync(classroom);
+            var memberLeftEvent = new MemberLeftEvent { ClassroomId = classroomId, StudentId = studentId };
+            await _publishEndpoint.Publish(memberLeftEvent);
             return Ok(SharedResponse<ClassroomDto>.Success(_mapper.Map<ClassroomDto>(classroom), null));
         }
         

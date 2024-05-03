@@ -9,17 +9,13 @@ using CustomEd.User.Teacher.Events;
 
 public class MapperProfile : Profile
 {
-    private readonly IGenericRepository<Teacher> _teacherRepository;
-    public MapperProfile(IGenericRepository<Teacher> teacherRepository)
+    public MapperProfile()
     {
-        _teacherRepository = teacherRepository;
 
         CreateMap<Classroom, ClassroomDto>().ReverseMap();
-        CreateMap<CreateClassroomDto, Classroom>()
-            .ForMember(dest => dest.Creator, opt => opt.MapFrom(async (src, dest, destMember, context) => await _teacherRepository.GetAsync(src.CreatorId)));
+        CreateMap<CreateClassroomDto, Classroom>();
 
-        CreateMap<UpdateClassroomDto, Classroom>()
-            .ForMember(dest => dest.Creator, opt => opt.MapFrom(async (src, dest, destMember, context) => await _teacherRepository.GetAsync(src.CreatorId)));
+        CreateMap<UpdateClassroomDto, Classroom>();
 
         CreateMap<TeacherCreatedEvent, Teacher>().ReverseMap();
         CreateMap<TeacherUpdatedEvent, Teacher>().ReverseMap();

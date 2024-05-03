@@ -14,7 +14,7 @@ public class CreateClassroomDtoValidator : AbstractValidator<CreateClassroomDto>
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required.")
-            .Length(1, 20).WithMessage("Name must be between 1 and 20 characters.");
+            .Length(1, 50).WithMessage("Name must be between 1 and 50 characters.");
 
         RuleFor(x => x.CourseNo)
             .NotEmpty().WithMessage("CourseNo is required.")

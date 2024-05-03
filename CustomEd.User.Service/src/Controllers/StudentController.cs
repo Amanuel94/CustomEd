@@ -113,7 +113,7 @@ namespace CustomEd.User.Service.Controllers
             }
 
             var identityProvider = new IdentityProvider(
-                (IHttpContextAccessor)HttpContext,
+                _httpContextAccessor,
                 _jwtService
             );
             var currentUserId = identityProvider.GetUserId();

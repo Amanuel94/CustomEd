@@ -29,7 +29,7 @@ namespace CustomEd.Classroom.Service.Consumers
             var classrooms = await _classroomRepository.GetAllAsync(x => x.Members.Contains(student));
             foreach (var classroom in classrooms)
             {
-                classroom.Members.Remove(student);
+                classroom.Members = classroom.Members.Where(x => x.Id != StudentUpdatedEvent.Id).ToList();
                 classroom.Members.Add(student);
                 await _classroomRepository.UpdateAsync(classroom);
             }

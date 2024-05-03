@@ -4,11 +4,11 @@ using System;
 
 namespace CustomEd.Classroom.Service.DTOs.Validation
 {
-    public class AddStudentDtoValidator : AbstractValidator<AddStudentDto>
+    public class RemoveStudentDtoValidator : AbstractValidator<RemoveStudentDto>
     {
         private IGenericRepository<Model.Student> _studentRepository;
         private IGenericRepository<Model.Classroom> _classroomRepository;
-        public AddStudentDtoValidator(IGenericRepository<Model.Student> studentRepository, IGenericRepository<Model.Classroom> classroomRepository)
+        public RemoveStudentDtoValidator(IGenericRepository<Model.Student> studentRepository, IGenericRepository<Model.Classroom> classroomRepository)
         {
             _studentRepository = studentRepository;
             _classroomRepository = classroomRepository;
@@ -33,12 +33,12 @@ namespace CustomEd.Classroom.Service.DTOs.Validation
                     var classroom = await _classroomRepository.GetAsync(dto.cid);
                     if (classroom.Members == null || classroom.Members.Count == 0   )
                     {
-                        return true;
+                        return false;
                     }
     
                     var members = classroom.Members.Select(x => x.Id).ToList();
-                    return !members.Contains(dto.sid);
-                }).WithMessage("Student is already in the classroom.");
+                    return members.Contains(dto.sid);
+                }).WithMessage("Student is not in the classroom.");
         }
     }
 }

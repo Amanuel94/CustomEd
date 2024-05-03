@@ -24,14 +24,13 @@ namespace CustomEd.Classroom.Service.Consumers
         {
             var StudentDeletedEvent = context.Message;
             var student = await _studentRepository.GetAsync(StudentDeletedEvent.Id);
-            await _studentRepository.RemoveAsync(StudentDeletedEvent.Id);
-
-            var classrooms = await _classroomRepository.GetAllAsync(x => x.Members.Contains(student));
+            var classrooms = await _classroomRepository.GetAllAsync(x => x.Members.Select(x => x.Id).Contains(StudentDeletedEvent.Id));
             foreach (var classroom in classrooms)
             {
-                classroom.Members.Remove(student);
+                classroom.Members = classroom.Members.Where(x => x.Id != StudentDeletedEvent.Id).ToList();
                 await _classroomRepository.UpdateAsync(classroom);
             }
+            await _studentRepository.RemoveAsync(StudentDeletedEvent.Id);
             return;
         }
     }
