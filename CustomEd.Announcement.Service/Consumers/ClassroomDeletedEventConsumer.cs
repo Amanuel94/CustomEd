@@ -29,7 +29,6 @@ namespace CustomEd.Announcement.Service.Consumers
                 return;
             }
             await _classRoomRepository.RemoveAsync(classroom);
-            await _teacherRepository.RemoveAsync(new Teacher { Id = classroom.CreatorId });
             var announcements = await _announcementRepository.GetAllAsync(x => x.ClassRoom.Id == classroom.Id);
             foreach (var announcement in announcements)
             {

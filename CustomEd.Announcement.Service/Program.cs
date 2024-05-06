@@ -1,3 +1,4 @@
+using System.Reflection;
 using CustomEd.Announcement.Service.Model;
 using CustomEd.Announcement.Service.Policies;
 using CustomEd.Shared.Data;
@@ -6,6 +7,7 @@ using CustomEd.Shared.JWT.Interfaces;
 using CustomEd.Shared.RabbitMQ;
 using CustomEd.Shared.Settings;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,8 @@ builder.Services.AddScoped<IAuthorizationHandler, MemberOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, CreatorOnlyPolicy>();
 builder.Services.AddMassTransitWithRabbitMq();
 
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -42,11 +46,11 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+// }
 
 app.UseHttpsRedirection();
 

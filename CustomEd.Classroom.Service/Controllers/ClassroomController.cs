@@ -246,7 +246,7 @@ namespace CustomEd.Classroom.Service.Controllers
             var student = await _studentRepository.GetAsync(studentId);
             if (classroom.Members != null)
             {
-                classroom.Members.Remove(student);
+                classroom.Members = classroom.Members.Where(x => x.Id != studentId).ToList();
             }
             await _classroomRepository.UpdateAsync(classroom);
             var memberLeftEvent = new MemberLeftEvent { ClassroomId = classroomId, StudentId = studentId };

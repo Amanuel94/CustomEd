@@ -8,17 +8,11 @@ namespace CustomEd.Announcement.Service.Profiles
 {
     public class MapperProfile : Profile
     {
-        private readonly IGenericRepository<ClassRoom> _classroomRepository;
-        public MapperProfile(IGenericRepository<ClassRoom> classroomRepository)
+        public MapperProfile()
         {
-            _classroomRepository = classroomRepository;
-
             CreateMap<Model.Announcement, AnnouncementDto>().ReverseMap();
-            CreateMap<CreateAnnouncementDto, Model.Announcement>()
-                .ForMember(dest => dest.ClassRoom, opt => opt.MapFrom(src => _classroomRepository.GetAsync(src.ClassRoomId)));
-            CreateMap<UpdateAnnouncementDto, Model.Announcement>()
-                .ForMember(dest => dest.ClassRoom, opt => opt.MapFrom(src => _classroomRepository.GetAsync(src.ClassRoomId)));
-
+            CreateMap<CreateAnnouncementDto, Model.Announcement>();
+            CreateMap<UpdateAnnouncementDto, Model.Announcement>();
             CreateMap<ClassRoom, ClassroomCreatedEvent>().ReverseMap();
             CreateMap<ClassRoom, ClassroomUpdatedEvent>().ReverseMap();
 

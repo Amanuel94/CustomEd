@@ -6,23 +6,22 @@ using CustomEd.Shared.Data.Interfaces;
 
 namespace CustomEd.Announcement.Service.Consumers
 {
-    public class MemberJoinedEventConsumer : IConsumer<MemberJoinedEvent>
+    public class MemberLeftEventConsumer : IConsumer<MemberLeftEvent>
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepository<ClassRoom> _classRoomRepository;
 
-        public MemberJoinedEventConsumer(IMapper mapper, IGenericRepository<ClassRoom> classRoomRepository)
+        public MemberLeftEventConsumer(IMapper mapper, IGenericRepository<ClassRoom> classRoomRepository)
         {
             _mapper = mapper;
             _classRoomRepository = classRoomRepository;
         }
 
-        public async Task Consume(ConsumeContext<MemberJoinedEvent> context)
+        public async Task Consume(ConsumeContext<MemberLeftEvent> context)
         {
             var classroom = await _classRoomRepository.GetAsync(context.Message.ClassroomId);
-            classroom.MemberIds.Add(context.Message.StudentId);
-            Console.WriteLine("Here is the count of the members in the classroom:");
             Console.WriteLine(classroom.MemberIds.Count);
+            classroom.MemberIds = classroom.MemberIds.Where(x => x != context.Message.StudentId).ToList();
             await _classRoomRepository.UpdateAsync(classroom);
 
         }
