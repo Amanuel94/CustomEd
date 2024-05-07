@@ -6,6 +6,8 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Net.Mail;
 
 namespace CustomEd.Announcement.Service.Controllers
 {
@@ -34,6 +36,7 @@ namespace CustomEd.Announcement.Service.Controllers
             Guid classId = Guid.Parse(classRoomId);
             var posts =  await  _announcementRepository.GetAllAsync(x => x.ClassRoom.Id == classId);
             var dtos = _mapper.Map<List<AnnouncementDto>>(posts);
+            
             return SharedResponse<List<AnnouncementDto>>.Success(dtos, "Announcements Retrived");
         }
 
@@ -72,34 +75,99 @@ namespace CustomEd.Announcement.Service.Controllers
             var announcement = _mapper.Map<Model.Announcement>(dto);
             announcement.ClassRoom = await _classRoomRepository.GetAsync(Guid.Parse(classRoomId));
             await _announcementRepository.CreateAsync(announcement);
+
+            
             var announcementDto = _mapper.Map<AnnouncementDto>(announcement);
             return Ok(SharedResponse<AnnouncementDto>.Success(announcementDto, "Announcement Created"));
             
         }
 
-        [HttpPut("{classRoomId}/announcements")]
+        [HttpPost("{classRoomId}/announcements/attach/{id}")]
         [Authorize(policy:"CreatorOnlyPolicy")]
-        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Update(string classRoomId, UpdateAnnouncementDto dto)
+        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> Attach(string classRoomId, Guid id, [FromForm] List<IFormFile> attachements)
         {
+            var announcement = await _announcementRepository.GetAsync(id);
+            if (announcement == null)
+            {
+                return NotFound(SharedResponse<AnnouncementDto>.Fail("Announcement not found", null));
+            }
+            if (announcement.ClassRoom.Id.ToString() != classRoomId)
+            {
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot attach announcement in a different classroom", null));
+            }
+            string directoryPath = Path.Combine("Uploads", announcement.Id.ToString());
             
-            var updateAnnouncementDtoValidator = new UpdateAnnouncementDtoValidator(_classRoomRepository, _announcementRepository);
-            var result = await updateAnnouncementDtoValidator.ValidateAsync(dto);
-            if (!result.IsValid)
+            var totalMegaBytes = attachements.Sum(x => x.Length) / 1024 / 1024;
+            if (totalMegaBytes > 10)
             {
-                var errors = result.Errors.Select(x => x.ErrorMessage).ToList();
-                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Validation Error", errors));
-
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Total size of attachments must not exceed 10MB", null));
             }
-
-            if(dto.ClassRoomId != Guid.Parse(classRoomId))
+            Console.WriteLine("Directory Path: " + directoryPath);
+            Console.WriteLine(attachements.Count);
+            if (attachements != null)
             {
-                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot update announcement in a different classroom", null));
+                foreach (var file in attachements)
+                {
+                    var tempName = Guid.NewGuid().ToString();
+                    string filePath = Path.Combine(directoryPath,
+                                                   tempName + Path.GetExtension(file.FileName));
+                    if (!Directory.Exists(directoryPath))
+                    {
+                        Directory.CreateDirectory(directoryPath);
+                    }
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        if (Path.GetExtension(file.FileName).ToLower() == ".pdf")
+                        {
+                            Console.WriteLine("Writing...");
+                            await file.CopyToAsync(stream);
+                        }
+                        else{
+                            return BadRequest(SharedResponse<AnnouncementDto>.Fail("Only PDF files are allowed", null));
+                        }
+                    }
+
+                    if(announcement.Attachements == null)
+                    {
+                        announcement.Attachements = new List<string>();
+                    }
+
+                    announcement.Attachements.Add(tempName);
+                    Console.WriteLine(announcement.Attachements.Count);
+                    Console.WriteLine("File Path: " + filePath);
+                }
             }
-            var announcement = _mapper.Map<Model.Announcement>(dto);
-            announcement.ClassRoom = await _classRoomRepository.GetAsync(Guid.Parse(classRoomId));
             await _announcementRepository.UpdateAsync(announcement);
             return NoContent();
         }
+
+        [HttpDelete("{classRoomId}/announcements/{id}/attachments/{fileName}")]
+        [Authorize(policy:"CreatorOnlyPolicy")]
+        public async Task<ActionResult<SharedResponse<AnnouncementDto>>> RemoveAttachment(string classRoomId, Guid id, string fileName)
+        {
+            var announcement = await _announcementRepository.GetAsync(id);
+            if (announcement == null)
+            {
+                return NotFound(SharedResponse<AnnouncementDto>.Fail("Announcement not found", null));
+            }
+            if (announcement.ClassRoom.Id.ToString() != classRoomId)
+            {
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot remove attachment in a different classroom", null));
+
+            }
+            string directoryPath = Path.Combine("Uploads", announcement.Id.ToString());
+            string filePath = Path.Combine(directoryPath, fileName + ".pdf");
+            if (!Directory.Exists(directoryPath) || !System.IO.File.Exists(filePath))
+            {
+                return NotFound(SharedResponse<AnnouncementDto>.Fail("Attachment not found", null));
+            }
+            System.IO.File.Delete(filePath);
+            announcement.Attachements!.Remove(fileName);
+            await _announcementRepository.UpdateAsync(announcement);
+            return NoContent();
+        }
+
+
         
         [HttpDelete("{classRoomId}/announcements/{id}")]
         [Authorize(policy:"CreatorOnlyPolicy")]

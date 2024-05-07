@@ -27,9 +27,6 @@ public class UpdateAnnouncementDtoValidator : AbstractValidator<UpdateAnnounceme
             .NotEmpty().WithMessage("Content is required")
             .MaximumLength(500).WithMessage("Content must not exceed 500 characters");
         
-        RuleFor(x => x.Attachments)
-            .NotEmpty().WithMessage("Attachments is required")
-            .Must(x => x.Count <= 5).WithMessage("Attachments must not exceed 5 items");
         
         RuleFor(x => x.ClassRoomId)
             .NotEmpty().WithMessage("ClassRoomId is required")

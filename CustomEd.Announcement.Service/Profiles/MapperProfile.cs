@@ -10,7 +10,8 @@ namespace CustomEd.Announcement.Service.Profiles
     {
         public MapperProfile()
         {
-            CreateMap<Model.Announcement, AnnouncementDto>().ReverseMap();
+            CreateMap<Model.Announcement, AnnouncementDto>()
+            .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Attachements));
             CreateMap<CreateAnnouncementDto, Model.Announcement>();
             CreateMap<UpdateAnnouncementDto, Model.Announcement>();
             CreateMap<ClassRoom, ClassroomCreatedEvent>().ReverseMap();
