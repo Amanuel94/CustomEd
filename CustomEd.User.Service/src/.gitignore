@@ -551,3 +551,4 @@ logs/
 obj/*
 appsettings.Development.json
 appsettings.json
+Uploads/

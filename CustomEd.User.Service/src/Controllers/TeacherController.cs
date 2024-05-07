@@ -123,5 +123,87 @@ namespace CustomEd.User.Service.Controllers
             return await base.SignIn(request);
             
         }
+
+        [Authorize]
+        [HttpPost("upload")]
+        public async Task<ActionResult<SharedResponse<TeacherDto>>> UploadImage(IFormFile file)
+        {
+            var userId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+            var user = await _userRepository.GetAsync(userId);
+            if (user == null)
+            {
+            return NotFound(SharedResponse<TeacherDto>.Fail("User not found", null));
+            }
+
+            if (file == null || file.Length == 0)
+            {
+            return BadRequest(SharedResponse<TeacherDto>.Fail("Invalid file", null));
+            }
+
+            var fileName = user.Role.ToString() + "_" + Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var filePath = Path.Combine("./Uploads", fileName);
+
+            try
+            {
+                if(user.ImageUrl != null)
+                {
+                    var oldFilePath = Path.Combine("./Uploads", user.ImageUrl);
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                        System.IO.File.Delete(oldFilePath);
+                    }
+                }
+
+                if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                }
+
+                using (var stream = System.IO.File.Create(filePath))
+                 {
+                await file.CopyToAsync(stream);
+                }
+
+                user.ImageUrl = fileName;
+                await _userRepository.UpdateAsync(user);
+
+                var teacherDto = _mapper.Map<TeacherDto>(user);
+
+                return Ok(SharedResponse<TeacherDto>.Success(teacherDto, "Image uploaded successfully"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, SharedResponse<TeacherDto>.Fail("Error uploading image", new List<string>{ex.Message}));
+            }
+        }
+        
+
+        
+        [HttpGet("picture/{userId}")]
+        public async Task<IActionResult> GetUploadedFile(Guid userId)
+        {
+            var user = await _userRepository.GetAsync(userId);
+            if (user == null)
+            {
+                Console.WriteLine("User not found");
+                return NotFound("User not found");
+            }
+            var fileName = user.ImageUrl;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                Console.WriteLine("File not found");
+                return NotFound("File not found");
+            }
+            var filePath = Path.Combine("./Uploads", fileName);
+            if (!System.IO.File.Exists(filePath))
+            {
+                Console.WriteLine("File not found");
+                return NotFound("File not found");
+            }
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return Ok(File(fileBytes, "application/octet-stream", fileName));
+        }
+
     }
 }

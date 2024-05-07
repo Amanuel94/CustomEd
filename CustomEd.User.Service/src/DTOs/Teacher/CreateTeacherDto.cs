@@ -10,7 +10,6 @@ namespace CustomEd.User.Service.DTOs
         public Department? Department { get; set; }
         public string? PhoneNumber { get; set; }
         public DateOnly? JoinDate { get; set; }
-        public string? ImageUrl { get; set; }
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
     }

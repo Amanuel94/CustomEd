@@ -9,6 +9,7 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.Response;
 using MassTransit;
 using CustomEd.User.Service.Model;
+using CustomEd.Shared.JWT;
 
 namespace CustomEd.User.Service.Controllers
 {
@@ -74,5 +75,6 @@ namespace CustomEd.User.Service.Controllers
 
             return Ok(SharedResponse<UserDto>.Success(userDto, null));
         }        
+       
     }
 }
