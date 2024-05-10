@@ -11,7 +11,7 @@ namespace CustomEd.Shared.RabbitMQ;
 
 public static class Extensions
 {
-    public static IServiceCollection AddMassTransitWithRabbitMq(this IServiceCollection services)
+    public static IServiceCollection AddMassTransitWithRabbitMq(this IServiceCollection services, string queueName)
     {
         services.AddMassTransit(busConfigurator =>
         {
@@ -20,8 +20,16 @@ public static class Extensions
             busConfigurator.UsingRabbitMq((context, configurator) =>
             {
                 var rabbitMQSettings = context.GetRequiredService<IConfiguration>().GetSection(nameof(RabbitMQSettings)).Get<RabbitMQSettings>();
+                // var queueName = Assembly.GetEntryAssembly().GetName().Name;
+                // var queueName = Guid.NewGuid().ToString();
+                Console.WriteLine($"Queue Name: {queueName}");
                 configurator.Host(rabbitMQSettings.Host);
-                configurator.ConfigureEndpoints(context);
+                // configurator.ConfigureEndpoints(context);
+                configurator.ReceiveEndpoint(queueName, endpointConfigurator =>
+                {
+                    endpointConfigurator.ConfigureConsumers(context);
+                });
+
                 configurator.UseMessageRetry(retryConfigurator =>
                 {
                     retryConfigurator.Interval(3, TimeSpan.FromSeconds(5));

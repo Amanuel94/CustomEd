@@ -24,7 +24,7 @@ builder.Services.AddSingleton<IOtpService, OtpService>();
 builder.Services.AddMongo();
 builder.Services.AddPersistence<Otp>("Otp");
 builder.Services.AddPersistence<User>("User");
-builder.Services.AddMassTransitWithRabbitMq();
+builder.Services.AddMassTransitWithRabbitMq("OtpServiceQueue");
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

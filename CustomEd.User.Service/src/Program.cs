@@ -36,7 +36,7 @@ builder.Services.AddPersistence<Teacher>("Teacher");
 builder.Services.AddPersistence<Otp>("Otp");
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddMassTransitWithRabbitMq();
+builder.Services.AddMassTransitWithRabbitMq("UserServiceQueue");
 builder.Services.AddAuth();
 builder.Services.AddAuthorization();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
