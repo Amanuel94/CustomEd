@@ -1,4 +1,5 @@
 using AutoMapper;
+using CusotmEd.Contracts.User.Events;
 using CusotmEd.User.Servce.DTOs;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.JWT;
@@ -94,6 +95,10 @@ namespace CustomEd.User.Service.Controllers
 
             var studentCreatedEvent = _mapper.Map<StudentCreatedEvent>(student);
             // await _publishEndpoint.Publish(studentCreatedEvent);
+            var unverifiedUserEvent = new UnverifiedUserEvent{
+            Id = student.Id,
+            Role = (Shared.Model.Role)Role.Student
+        };
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = student.Id },

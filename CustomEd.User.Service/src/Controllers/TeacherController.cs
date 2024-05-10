@@ -15,6 +15,7 @@ using CustomEd.Shared.JWT.Contracts;
 using CusotmEd.User.Servce.DTOs;
 using CustomEd.User.Teacher.Events;
 using CustomEd.User.Contracts.Teacher.Events;
+using CusotmEd.Contracts.User.Events;
 
 namespace CustomEd.User.Service.Controllers
 {
@@ -53,9 +54,12 @@ namespace CustomEd.User.Service.Controllers
         teacher.Role = Model.Role.Teacher;
         
         await _userRepository.CreateAsync(teacher);
-        var teacherCreatedEvent = _mapper.Map<TeacherCreatedEvent>(teacher);
+        var unverifiedUserEvent = new UnverifiedUserEvent{
+            Id = teacher.Id,
+            Role = (Shared.Model.Role)Role.Teacher
+        };
         var dto = _mapper.Map<TeacherDto>(teacher);
-        // await _publishEndpoint.Publish(teacherCreatedEvent);
+        await _publishEndpoint.Publish(unverifiedUserEvent);
         return CreatedAtAction(nameof(GetUserById), new { id = teacher.Id }, SharedResponse<TeacherDto>.Success(dto, "User created successfully"));
             
         }

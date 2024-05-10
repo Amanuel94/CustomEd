@@ -33,6 +33,7 @@ namespace CustomEd.User.Service.Consumers
                 student.IsVerified = true;
                 await _studentRepository.UpdateAsync(student);
                 var studentCreatedEvent = _mapper.Map<StudentCreatedEvent>(student);
+                Console.WriteLine("Log: Student Published");
                 await _publishEndpoint.Publish(studentCreatedEvent);
              
                 
@@ -43,6 +44,7 @@ namespace CustomEd.User.Service.Consumers
                 teacher.IsVerified = true;
                 await _teacherRepository.UpdateAsync(teacher);
                 var teacherCreatedEvent = _mapper.Map<TeacherCreatedEvent>(teacher);
+                Console.WriteLine("Log: Teacher Published");
                 await _publishEndpoint.Publish(teacherCreatedEvent);
             }
         }
