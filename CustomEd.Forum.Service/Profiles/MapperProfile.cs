@@ -5,19 +5,16 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.User.Teacher.Events;
 using CustomEd.Shared.Model;
 using CustomEd.User.Student.Events;
+using CustomEd.Contracts.Classroom.Events;
 
 namespace CustomEd.Forum.Service.Profiles
 {
     public class MapperProfile : Profile
     {
-        private readonly IGenericRepository<Model.User> _userRepository;
-        private readonly IGenericRepository<Model.Classroom> _classroomRepository;
-        public MapperProfile(IGenericRepository<Model.User> userRepository, IGenericRepository<Model.Classroom> classroomRepository)
+       
+        public MapperProfile()
         {
-            _userRepository = userRepository;
-            _classroomRepository = classroomRepository;
-
-            CreateMap<Model.User, UserDto>()
+            CreateMap<Teacher, UserDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
@@ -28,21 +25,18 @@ namespace CustomEd.Forum.Service.Profiles
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
             
-            CreateMap<TeacherCreatedEvent, Model.User>()
+
+            CreateMap<Student, UserDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Role.Teacher));
-            
-            CreateMap<StudentCreatedEvent, Model.User>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Role.Student));
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role))
+                .ForMember(dest => dest.UnreadMessages, opt => opt.MapFrom(src => src.UnreadMessages.Select(m => m.Id).ToList()))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+        
 
             CreateMap<Model.Classroom, ClassroomDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -60,15 +54,34 @@ namespace CustomEd.Forum.Service.Profiles
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
                 .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
                 .ForMember(dest => dest.ClassroomId, opt => opt.MapFrom(src => src.Classroom!.Id));
+            
+            CreateMap<MessageDto, Message>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
+                .ForMember(dest => dest.Classroom, opt => opt.MapFrom(src => src.ClassroomId))
+                .ForMember(dest => dest.ThreadParent, opt => opt.MapFrom(src => src.ThreadParent))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
+
 
             CreateMap<CreateMessageDto, Message>()
-                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
-                .ForMember(dest => dest.Sender, opt => opt.MapFrom(async (src, dest, destMember, context) => await _userRepository!.GetAsync(src.SenderId)))
-                .ForMember(dest => dest.Classroom, opt => opt.MapFrom(async (src, dest, destMember, context) => await _classroomRepository!.GetAsync(src.ClassroomId)));
-            
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content));
+
             CreateMap<UpdateMessageDto, Message>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content));
             
-            }
+            CreateMap<TeacherCreatedEvent, Teacher>();
+            CreateMap<StudentCreatedEvent, Student>();
+
+            CreateMap<TeacherUpdatedEvent, Teacher>();
+            CreateMap<StudentUpdatedEvent, Student>();
+            
+            CreateMap<ClassroomCreatedEvent, Model.Classroom>();
+            CreateMap<ClassroomUpdatedEvent, Model.Classroom>();
+        }
+
+
+            
     }
 }

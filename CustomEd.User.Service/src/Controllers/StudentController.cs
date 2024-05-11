@@ -93,12 +93,15 @@ namespace CustomEd.User.Service.Controllers
 
             await _userRepository.CreateAsync(student);
 
-            var studentCreatedEvent = _mapper.Map<StudentCreatedEvent>(student);
-            // await _publishEndpoint.Publish(studentCreatedEvent);
             var unverifiedUserEvent = new UnverifiedUserEvent{
             Id = student.Id,
             Role = (Shared.Model.Role)Role.Student
         };
+            unverifiedUserEvent.Id = student.Id;
+            Console.WriteLine("Log: Student Created");
+            Console.WriteLine($"Log: {student.Id}");
+            Console.WriteLine($"Log: {unverifiedUserEvent.Id}");
+            await _publishEndpoint.Publish(unverifiedUserEvent);
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = student.Id },

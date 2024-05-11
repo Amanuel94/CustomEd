@@ -9,5 +9,5 @@ public class User : BaseEntity
     public string Email { get; set; } = null!; 
     public string PhoneNumber { get; set; } = null!;    
     public Role Role { get; set; }
-    public List<Message> UnreadMessages { get; set; } = null!;
+    public List<Message> UnreadMessages { get; set; } = new List<Message>();
 }

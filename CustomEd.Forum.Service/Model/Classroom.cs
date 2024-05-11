@@ -6,6 +6,6 @@ namespace CustomEd.Forum.Service.Model
     {
         public string Name { get; set; } = null!;
         public User Creator { get; set; } = null!;
-        public List<User> Members { get; set; } = null!;
+        public List<Student> Members { get; set; } = null!;
     }
 }

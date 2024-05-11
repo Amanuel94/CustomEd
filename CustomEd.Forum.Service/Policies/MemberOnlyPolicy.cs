@@ -22,7 +22,8 @@ namespace CustomEd.Forum.Service.Policies
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, MemberOnlyRequirement requirement)
         {
-            var classroomId = (Guid)_httpContextAccessor.HttpContext!.Request.RouteValues["classRoomId"]!;
+            Guid classroomId;
+            Guid.TryParse((string)_httpContextAccessor.HttpContext!.Request.RouteValues["classRoomId"]!, out classroomId);
             var identityProvider = new IdentityProvider(_httpContextAccessor, _jwtService);
             var userId = identityProvider.GetUserId();
 

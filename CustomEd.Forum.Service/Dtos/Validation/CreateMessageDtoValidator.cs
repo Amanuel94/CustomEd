@@ -3,12 +3,13 @@ using CustomEd.Forum.Service.Dto;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Forum.Service.Model;
 
-public class CreateMessageDtoValidator : AbstractValidator<CreateMessageDto>
+namespace CustomEd.Forum.Service.Dto;
+public class CreateMessageDtoValidator<T> : AbstractValidator<CreateMessageDto> where T:Model.User
 {
-    private readonly IGenericRepository<User> _userRepository;
-    private readonly IGenericRepository<Classroom> _classroomRepository;
+    private readonly IGenericRepository<T> _userRepository;
+    private readonly IGenericRepository<Model.Classroom> _classroomRepository;
     private readonly IGenericRepository<Message> _messageRepository;
-    public CreateMessageDtoValidator(IGenericRepository<User> userRepository, IGenericRepository<Classroom> classroomRepository, IGenericRepository<Message> messageRepository)
+    public CreateMessageDtoValidator(IGenericRepository<T> userRepository, IGenericRepository<Model.Classroom> classroomRepository, IGenericRepository<Message> messageRepository)
     {
         _userRepository = userRepository;
         _classroomRepository = classroomRepository;
@@ -25,14 +26,7 @@ public class CreateMessageDtoValidator : AbstractValidator<CreateMessageDto>
                 var sender = await _userRepository.GetAsync(senderId);
                 return sender != null;
             }).WithMessage("Sender does not exist.");
-        
-        RuleFor(x=> x.ThreadParent)
-            .NotEmpty().WithMessage("ThreadParent is required.")
-            .MustAsync(async (threadParent, cancellationToken) =>
-            {
-                var message = await _messageRepository.GetAsync(threadParent);
-                return message != null;
-            }).WithMessage("ThreadParent does not exist.");
+    
 
         RuleFor(x => x.ClassroomId)
             .NotEmpty().WithMessage("ClassroomId is required.")

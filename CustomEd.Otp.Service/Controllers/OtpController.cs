@@ -42,7 +42,7 @@ namespace CustomEd.Otp.Service.Controllers
                 string message =
                     $"<div style=\"color: #333333; font-family: Arial, sans-serif; font-size: 16px;\">Dear User,<br><br>"
                     + $"Your one-time password is: <span style=\"color: #ff6600; font-weight: bold;\">{otp}</span>.<br><br>"
-                    + $"Please use this OTP to complete your transaction.<br><br>"
+                    + $"Please use this OTP to verify your email.<br><br>"
                     + $"Thank you,<br>"
                     + $"CustomEd</div>";
 

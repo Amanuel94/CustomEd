@@ -23,9 +23,13 @@ public class MapperProfile : Profile
         CreateMap<StudentCreatedEvent, Student>().ReverseMap();
         CreateMap<StudentUpdatedEvent, Student>().ReverseMap();
 
-        CreateMap<ClassroomCreatedEvent, Classroom>().ReverseMap();
-        CreateMap<ClassroomUpdatedEvent, Classroom>().ReverseMap();
-        
-        
+        CreateMap<Classroom, ClassroomCreatedEvent>()
+        .ForMember(dest => dest.CreatorId , opt => opt.MapFrom(src => src.Creator.Id))
+        .ForMember(dest => dest.MemberIds , opt => opt.MapFrom(src => src.Members.Select(x => x.Id).ToList()));
+
+        CreateMap<Classroom, ClassroomUpdatedEvent>()
+        .ForMember(dest => dest.CreatorId , opt => opt.MapFrom(src => src.Creator.Id))
+        .ForMember(dest => dest.MemberIds , opt => opt.MapFrom(src => src.Members.Select(x => x.Id).ToList()));
+    
     }
 }

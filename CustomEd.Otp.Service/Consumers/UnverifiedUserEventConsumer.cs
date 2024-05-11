@@ -18,8 +18,10 @@ namespace CustomEd.Otp.Service.Consumers
 
         public async Task Consume(ConsumeContext<UnverifiedUserEvent> context)
         {
+            Console.WriteLine("Log: Unverified User Event Consumed");
+            Console.WriteLine($"Log:{context.Message.Id} {context.Message.Role}");
             var user = new Model.User { userId = context.Message.Id, Role = context.Message.Role };
-            await _userRepository.RemoveAsync(user);
+            await _userRepository.CreateAsync(user);
             return;
         }
     }

@@ -4,12 +4,13 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Forum.Service.Model;
 using System.Data;
 
-public class UpdateMessageDtoValidator : AbstractValidator<UpdateMessageDto>
+namespace CustomEd.Forum.Service.Dto;
+public class UpdateMessageDtoValidator<T> : AbstractValidator<UpdateMessageDto> where T:Model.User
 {
-    private readonly IGenericRepository<User> _userRepository;
-    private readonly IGenericRepository<Classroom> _classroomRepository;
+    private readonly IGenericRepository<T> _userRepository;
+    private readonly IGenericRepository<Model.Classroom> _classroomRepository;
     private readonly IGenericRepository<Message> _messageRepository;
-    public UpdateMessageDtoValidator(IGenericRepository<User> userRepository, IGenericRepository<Classroom> classroomRepository, IGenericRepository<Message> messageRepository)
+    public UpdateMessageDtoValidator(IGenericRepository<T> userRepository, IGenericRepository<Model.Classroom> classroomRepository, IGenericRepository<Message> messageRepository)
     {
         _userRepository = userRepository;
         _classroomRepository = classroomRepository;

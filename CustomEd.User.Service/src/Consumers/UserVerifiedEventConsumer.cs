@@ -29,6 +29,8 @@ namespace CustomEd.User.Service.Consumers
             var userVerifiedEvent = context.Message;
             if(userVerifiedEvent.Role == Role.Student)
             {
+                Console.WriteLine("Log: Student Verified");
+                Console.WriteLine($"Log: {userVerifiedEvent.UserId}");
                 var student = await _studentRepository.GetAsync(userVerifiedEvent.UserId);
                 student.IsVerified = true;
                 await _studentRepository.UpdateAsync(student);
