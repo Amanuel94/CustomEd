@@ -56,8 +56,9 @@ public class ForumHub : Hub<IForumClient>
                 if (user == null)
                 {
                     // return;
-                    Console.WriteLine("User is null");
+                    throw new Exception("User not found");
                 }
+
                 _connections.TryAdd(currentUserId, Context.ConnectionId);
 
                 var groups = await _classroomRepository.GetAllAsync(x =>
@@ -84,6 +85,13 @@ public class ForumHub : Hub<IForumClient>
             else
             {
                 var user = await _studentRepository.GetAsync(currentUserId);
+                if (user == null)
+                {
+                    // return;
+                    throw new Exception("User not found");
+                }
+
+                
                 _connections.TryAdd(currentUserId, Context.ConnectionId);
 
                 var groups = await _classroomRepository.GetAllAsync(x =>

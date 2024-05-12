@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using System.Net.Mail;
+using MassTransit;
+using CustomEd.Contracts.Notification.Events;
 
 namespace CustomEd.Announcement.Service.Controllers
 {
@@ -19,12 +21,14 @@ namespace CustomEd.Announcement.Service.Controllers
         private readonly IGenericRepository<Model.ClassRoom> _classRoomRepository;
         private readonly IGenericRepository<Model.Teacher> _teacherRepository;
         private readonly IMapper _mapper; 
-        public AnnouncementController(IGenericRepository<Model.Announcement> announcementRepository, IGenericRepository<Model.ClassRoom> classRoomRepository, IGenericRepository<Model.Teacher> teacherRepository, IMapper mapper)
+        private readonly IPublishEndpoint _publishEndpoint;
+        public AnnouncementController(IGenericRepository<Model.Announcement> announcementRepository, IGenericRepository<Model.ClassRoom> classRoomRepository, IGenericRepository<Model.Teacher> teacherRepository, IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             _announcementRepository = announcementRepository;
             _classRoomRepository = classRoomRepository;
             _teacherRepository = teacherRepository;
             _mapper = mapper;
+            _publishEndpoint = publishEndpoint;
             
         }
 
@@ -76,7 +80,12 @@ namespace CustomEd.Announcement.Service.Controllers
             announcement.ClassRoom = await _classRoomRepository.GetAsync(Guid.Parse(classRoomId));
             await _announcementRepository.CreateAsync(announcement);
 
-            
+            var notifyClassroomEvent = new NotifyClassroomEvent{
+                    ClassroomId = Guid.Parse(classRoomId),
+                    Description = "An Announcement has been posted",
+                    Type = "Announcement"
+            };
+            await _publishEndpoint.Publish(notifyClassroomEvent);
             var announcementDto = _mapper.Map<AnnouncementDto>(announcement);
             return Ok(SharedResponse<AnnouncementDto>.Success(announcementDto, "Announcement Created"));
             

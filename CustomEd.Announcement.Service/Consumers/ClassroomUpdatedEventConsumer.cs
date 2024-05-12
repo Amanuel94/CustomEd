@@ -24,6 +24,12 @@ namespace CustomEd.Announcement.Service.Consumers
         public async Task Consume(ConsumeContext<ClassroomUpdatedEvent> context)
         {
             var classroom = _mapper.Map<ClassRoom>(context.Message);
+            var newList = new List<Guid>();
+            foreach (var sid in context.Message.MemberIds)
+            {
+                newList.Add(sid);
+            }
+            classroom.MemberIds = newList;
             await _classRoomRepository.UpdateAsync(classroom);
             var announcements = await _announcementRepository.GetAllAsync(x => x.ClassRoom.Id == classroom.Id);
             foreach (var announcement in announcements)

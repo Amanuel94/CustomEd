@@ -96,6 +96,8 @@ namespace CustomEd.Classroom.Service.Controllers
             await _classroomRepository.UpdateAsync(classroom);
 
             var classroomUpdatedEvent = _mapper.Map<ClassroomUpdatedEvent>(classroom);
+            classroomUpdatedEvent.CreatorId = room.Creator.Id;
+            classroomUpdatedEvent.MemberIds = room.Members.Select(x => x.Id).ToList();
             await _publishEndpoint.Publish(classroomUpdatedEvent);
 
             return Ok(SharedResponse<Model.Classroom>.Success(classroom, null));
@@ -186,6 +188,8 @@ namespace CustomEd.Classroom.Service.Controllers
             }
             await _classroomRepository.UpdateAsync(classroom);
             var classroomUpdatedEvent = _mapper.Map<ClassroomUpdatedEvent>(classroom);
+            classroomUpdatedEvent.CreatorId = classroom.Creator.Id;
+            classroomUpdatedEvent.MemberIds = classroom.Members.Select(x => x.Id).ToList();
             await _publishEndpoint.Publish(classroomUpdatedEvent);
             return Ok(SharedResponse<ClassroomDto>.Success(_mapper.Map<ClassroomDto>(classroom), null));
         }

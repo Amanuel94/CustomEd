@@ -11,12 +11,10 @@ using CustomEd.Contracts.Notification.Events;
 namespace CustomEd.RTNotification.Service.Profiles;
     public class MapperProfile : Profile
     {
-        private readonly IGenericRepository<Model.User> _userRepository;
-        private readonly IGenericRepository<Model.Classroom> _classroomRepository;
-        public MapperProfile(IGenericRepository<Model.User> userRepository, IGenericRepository<Model.Classroom> classroomRepository)
+
+        public MapperProfile()
         {
-            _userRepository = userRepository;
-            _classroomRepository = classroomRepository;
+    
 
             CreateMap<TeacherCreatedEvent, Model.User>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -45,22 +43,29 @@ namespace CustomEd.RTNotification.Service.Profiles;
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now));
             
+            CreateMap<StudentCreatedEvent, Model.User>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Role.Student))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now));
+            
     
             CreateMap<ClassroomCreatedEvent, Model.Classroom>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.Creator, opt => opt.MapFrom(async (src, dest, destMember, context) => await _userRepository.GetAsync(src.CreatorId)))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now));
             
             CreateMap<ClassroomUpdatedEvent, Model.Classroom>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.Creator, opt => opt.MapFrom(async (src, dest, destMember, context) => await _userRepository.GetAsync(src.CreatorId)))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now));
 
             CreateMap<Notification, NotificationDto>().ReverseMap();
-            CreateMap<NotificationCreatedEvent, Notification>().ReverseMap();
+            CreateMap<NotifyClassroomEvent, Notification>().ReverseMap();
 
         }
 

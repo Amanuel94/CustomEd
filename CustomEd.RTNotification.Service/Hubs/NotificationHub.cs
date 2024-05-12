@@ -7,6 +7,7 @@ using CustomEd.RTNotification.Service.Model;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;
+using CustomEd.Shared.Model;
 using Microsoft.AspNetCore.SignalR;
 
 namespace CustomEd.RTNotification.Service.Hubs;
@@ -18,14 +19,17 @@ public class NotificationHub : Hub<INotifcationClient>
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IGenericRepository<Model.User> _userRepository;
     private readonly IGenericRepository<Model.Classroom> _classroomRepository;
+    private readonly IGenericRepository<Model.Notification> _notificationRepository;
     private readonly IMapper _mapper;
     private readonly IJwtService _jwtService;
+    private Guid _adminId { get; set; } = Guid.Empty;
 
     public NotificationHub(
         ConcurrentDictionary<Guid, string> connections,
         IHttpContextAccessor httpContextAccessor,
         IGenericRepository<Model.User> userRepository,
         IGenericRepository<Classroom> classroomRepository,
+        IGenericRepository<Notification> notificationRepository,
         IMapper mapper,
         IJwtService jwtService
     )
@@ -34,81 +38,62 @@ public class NotificationHub : Hub<INotifcationClient>
         _httpContextAccessor = httpContextAccessor;
         _userRepository = userRepository;
         _classroomRepository = classroomRepository;
+        _notificationRepository = notificationRepository;
         _mapper = mapper;
         _jwtService = jwtService;
     }
 
     public override async Task OnConnectedAsync()
     {
+        Console.WriteLine($"ConnectionId {Context.ConnectionId} is connecting. . .");
         try
         {
-            var token = Context.GetHttpContext()!.Request.Query["token"];
-
-            if (string.IsNullOrEmpty(token) || _jwtService.IsTokenValid(token!) == false)
+            // var token = Context.GetHttpContext().Request.Headers["Authorization"];
+            // if (string.IsNullOrEmpty(token))
+            // {
+            //     Console.WriteLine("No token found");
+            //     return;
+            // }
+            // Console.WriteLine(token);
+            var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+            var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+            var user = await _userRepository.GetAsync(currentUserId);
+            if (userRole != Role.Admin && user == null)
             {
-                throw new Exception("Invalid token");
+                return;
             }
-            var tokenHandler = new JwtSecurityTokenHandler();
-            JwtSecurityToken jwt = tokenHandler.ReadJwtToken(token);
-            var userId = Guid.Parse(jwt.Claims.First(x => x.Type == "nameid").Value);
+            if(userRole == Role.Admin) _adminId = currentUserId;
 
-
-            var user = await _userRepository.GetAsync(userId);
-
-            if (user == null)
-            {
-                Console.WriteLine("User not found");
-                throw new Exception("User not found");
-            }
-            _connections.TryAdd(userId, Context.ConnectionId);
+            _connections.TryAdd(currentUserId, Context.ConnectionId);
 
             var groups = await _classroomRepository.GetAllAsync(x =>
-                x.Members.Select(m => m.Id).Contains(userId) || x.Creator.Id == userId
+                x.Members.Select(m => m.Id).Contains(currentUserId) || x.Creator.Id == currentUserId
             );
 
             foreach (var group in groups)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, group.Id.ToString());
             }
-
-            foreach (var message in user.UnreadNotifications)
-            {
-                await Clients.Caller.ReceiveNotification(_mapper.Map<NotificationDto>(message));
-                user.UnreadNotifications.Remove(message);
-                await _userRepository.UpdateAsync(user);
-            }
-            
-
-
-
-
+            Console.WriteLine("Successful connection");
         }
         catch (System.Exception e)
         {
             // ignored
+            Console.WriteLine(e.Message);
             Console.WriteLine(e.StackTrace);
         }
 
         await base.OnConnectedAsync();
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception) {
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
         try
         {
-            var token = Context.GetHttpContext()!.Request.Query["token"];
-
-            if (string.IsNullOrEmpty(token) || _jwtService.IsTokenValid(token!) == false)
-            {
-                throw new Exception("Invalid token");
-            }
-            var tokenHandler = new JwtSecurityTokenHandler();
-            JwtSecurityToken jwt = tokenHandler.ReadJwtToken(token);
-            var userId = Guid.Parse(jwt.Claims.First(x => x.Type == "nameid").Value);
-
-            _connections.TryRemove(userId, out _);
-
+            var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+            _connections.TryRemove(currentUserId, out _);
             var groups = await _classroomRepository.GetAllAsync(x =>
-                x.Members.Select(m => m.Id).Contains(userId) || x.Creator.Id == userId
+                x.Members.Select(m => m.Id).Contains(currentUserId) || x.Creator.Id == currentUserId
             );
 
             foreach (var group in groups)
@@ -123,25 +108,47 @@ public class NotificationHub : Hub<INotifcationClient>
         }
 
         await base.OnDisconnectedAsync(exception);
-     }
+    }
 
-    public async Task SendNotification(Notification notification) { 
+    public async Task SendNotification(Notification notification)
+    {
+        await _notificationRepository.CreateAsync(notification);
         var group = await _classroomRepository.GetAsync(notification.ClassroomId);
-        var users = group.Members.Select(x => x.Id).ToList();
-        users.Add(group.Creator.Id);
-        foreach (var user in users)
+        if(_connections.Keys.Contains<Guid>(_adminId) && Context.ConnectionId != _connections[_adminId])
         {
-            if (_connections.TryGetValue(user, out var connectionId))
+            return;
+        }
+        await Clients
+            .Group(notification.ClassroomId.ToString())
+            .ReceiveNotification(_mapper.Map<NotificationDto>(notification));
+        foreach (var member in group.Members)
+        {
+            if (!_connections.Keys.Contains(member.Id))
             {
-                await Clients.Client(connectionId).ReceiveNotification(_mapper.Map<NotificationDto>(notification));
-            }
-            else
-            {
-                var userEntity = await _userRepository.GetAsync(user);
-                userEntity.UnreadNotifications.Add(notification);
-                await _userRepository.UpdateAsync(userEntity);
+                Console.WriteLine("Saving notification to member");
+                Console.WriteLine(member.Id);
+                Console.WriteLine(notification.Description);
+                var user = await _userRepository.GetAsync(member.Id);
+                if (user.UnreadNotifications == null)
+                {
+                    user.UnreadNotifications = new List<Notification>()!;
+                }
+                user.UnreadNotifications.Add(notification);
+                await _userRepository.UpdateAsync(user);
             }
         }
-
+        if (!_connections.Keys.Contains(group.Creator.Id))
+        {
+            var user = await _userRepository.GetAsync(group.Creator.Id);
+            Console.WriteLine("Saving notification to creator");
+            Console.WriteLine(user.Id);
+            Console.WriteLine(notification.Description);
+            if (user.UnreadNotifications == null)
+            {
+                user.UnreadNotifications = new List<Notification>()!;
+            }
+            user.UnreadNotifications.Add(notification);
+            await _userRepository.UpdateAsync(user);
+        }
     }
 }

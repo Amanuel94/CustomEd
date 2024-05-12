@@ -28,11 +28,15 @@ namespace CustomEd.Forum.Service.Consumers
         {
             var classroom = _mapper.Map<Model.Classroom>(context.Message);
             classroom.Creator = await _teacherRepository.GetAsync(context.Message.CreatorId);
+            var newList = new List<Student>();
             foreach (var sid in context.Message.MemberIds)
             {
+                Console.WriteLine(sid);
                 var student = await _studentRepository.GetAsync(sid);
-                classroom.Members.Add(_mapper.Map<Student>(student));
+                newList.Add(student);
             }
+        
+            classroom.Members = newList;
             await _classRoomRepository.UpdateAsync(classroom);
             var messages = await _messageRepository.GetAllAsync(x => x.Classroom!.Id == classroom.Id);
 
@@ -40,6 +44,16 @@ namespace CustomEd.Forum.Service.Consumers
             {
                 await _messageRepository.UpdateAsync(message);
             }
+
+            // var classroom = _mapper.Map<Model.Classroom>(context.Message);
+            // classroom.Creator = await _teacherRepository.GetAsync(context.Message.CreatorId);
+            // classroom.Members = new List<Student>();
+            // foreach (var sid in context.Message.MemberIds)
+            // {
+            //     var student = await _studentRepository.GetAsync(sid);
+            //     classroom.Members.Add(_mapper.Map<Student>(student));
+            // }
+            // await _classRoomRepository.CreateAsync(classroom);
         }
     }
 }
