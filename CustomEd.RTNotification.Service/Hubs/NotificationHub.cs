@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using AutoMapper;
+using CustomEd.Contracts.Notification.Events;
 using CustomEd.RTNotification.Service.Dto;
 using CustomEd.RTNotification.Service.Hubs.Interfaces;
 using CustomEd.RTNotification.Service.Model;
@@ -151,4 +152,36 @@ public class NotificationHub : Hub<INotifcationClient>
             await _userRepository.UpdateAsync(user);
         }
     }
+    
+    public async Task SendNotificationToUser(NotifyUserEvent notification)
+    {
+        var user = await _userRepository.GetAsync(notification.ReceiverId);
+        if (user == null)
+        {
+            return;
+        }
+        var newNotification = new Notification
+        {
+            Description = notification.Description,
+            Type = notification.Type,
+            
+        };
+        await _notificationRepository.CreateAsync(newNotification);
+        if (_connections.Keys.Contains(notification.ReceiverId))
+        {
+            await Clients
+                .Client(_connections[notification.ReceiverId])
+                .ReceiveNotification(_mapper.Map<NotificationDto>(newNotification));
+        }
+        else
+        {
+            if (user.UnreadNotifications == null)
+            {
+                user.UnreadNotifications = new List<Notification>()!;
+            }
+            user.UnreadNotifications.Add(newNotification);
+            await _userRepository.UpdateAsync(user);
+        }
+    }
+
 }
