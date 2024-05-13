@@ -146,6 +146,11 @@ namespace CustomEd.Announcement.Service.Controllers
                     Console.WriteLine("File Path: " + filePath);
                 }
             }
+            var notifyClassroomEvent = new NotifyClassroomEvent{
+                    ClassroomId = Guid.Parse(classRoomId),
+                    Description = $"An Attachment has been added to an Announcement in classroom {announcement.ClassRoom.Name}",
+                    Type = "Announcement"
+            };
             await _announcementRepository.UpdateAsync(announcement);
             return NoContent();
         }
