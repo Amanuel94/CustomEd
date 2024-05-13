@@ -9,6 +9,8 @@ using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;
 using CustomEd.Shared.Model;
 using Microsoft.AspNetCore.SignalR;
+using MassTransit;
+using CustomEd.Contracts.Notification.Events;
 
 public class ForumHub : Hub<IForumClient>
 {
@@ -21,6 +23,7 @@ public class ForumHub : Hub<IForumClient>
     private readonly IMapper _mapper;
     private readonly IJwtService _jwtService;
     private readonly IGenericRepository<Message> _messageRepository;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public ForumHub(
         ConcurrentDictionary<Guid, string> connections,
@@ -30,7 +33,8 @@ public class ForumHub : Hub<IForumClient>
         IGenericRepository<Student> studentRepository,
         IGenericRepository<Message> messageRepository,
         IMapper mapper,
-        IJwtService jwtService
+        IJwtService jwtService,
+        IPublishEndpoint publishEndpoint
     )
     {
         _connections = connections;
@@ -41,6 +45,7 @@ public class ForumHub : Hub<IForumClient>
         _teacherRepository = teacherRepository;
         _studentRepository = studentRepository;
         _messageRepository = messageRepository;
+        _publishEndpoint = publishEndpoint;
     }
 
     public override async Task OnConnectedAsync()
@@ -260,6 +265,29 @@ public class ForumHub : Hub<IForumClient>
             }
             user.UnreadMessages.Add(message);
             await _teacherRepository.UpdateAsync(user);
+        }
+
+        if(message.ThreadParent != null && message.ThreadParent != Guid.Empty)
+        {
+            var parentMessage = await _messageRepository.GetAsync(message.ThreadParent);
+            if (!_connections.Keys.Contains(parentMessage.Sender.Id))
+            {
+                var user = await _studentRepository.GetAsync(parentMessage.Sender.Id);
+                if (user.UnreadMessages == null)
+                {
+                    user.UnreadMessages = new List<Message>();
+                }
+                user.UnreadMessages.Add(message);
+                await _studentRepository.UpdateAsync(user);
+                var notifyUserEvent = new NotifyUserEvent
+                    {
+                        ReceiverId = user.Id,
+                        Description = "You have a new message",
+                        Type = $"{message.Content.Substring(0, 30)}",
+                        role = user.Role
+                    };
+                await _publishEndpoint.Publish(notifyUserEvent);
+            }
         }
     }
 }
