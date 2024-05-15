@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CustomEd.Assessment.Service.Controllers
 {
-    
     [Route("api/classroom/{classRoomId}/analytics")]
     [Authorize(Policy = "CreatorOnly")]
     [ApiController]
@@ -52,15 +51,28 @@ namespace CustomEd.Assessment.Service.Controllers
             Guid classRoomId
         )
         {
-            var crossStudent = await _analyticsService.PerformCrossStudent(studentId, classRoomId);
-            if (crossStudent == null)
+            try
             {
-                return NotFound(
-                    SharedResponse<List<CrossStudent?>>.Fail("No cross student data found", null)
+                var crossStudent = await _analyticsService.PerformCrossStudent(
+                    studentId,
+                    classRoomId
                 );
-            }
+                if (crossStudent == null)
+                {
+                    return NotFound(
+                        SharedResponse<List<CrossStudent?>>.Fail(
+                            "No cross student data found",
+                            null
+                        )
+                    );
+                }
 
-            return Ok(SharedResponse<List<CrossStudent?>>.Success(crossStudent, null));
+                return Ok(SharedResponse<List<CrossStudent?>>.Success(crossStudent, null));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<List<CrossStudent?>>.Fail(e.Message, null));
+            }
         }
 
         [HttpGet("cross-assessment")]
@@ -68,15 +80,25 @@ namespace CustomEd.Assessment.Service.Controllers
             Guid classRoomId
         )
         {
-            var analytics = await _analyticsService.PerformCrossAssessment(classRoomId);
-            if (analytics == null)
+            try
             {
-                return NotFound(
-                    SharedResponse<List<AnalyticsDto?>>.Fail("No cross assessment data found", null)
-                );
+                var analytics = await _analyticsService.PerformCrossAssessment(classRoomId);
+                if (analytics == null)
+                {
+                    return NotFound(
+                        SharedResponse<List<AnalyticsDto?>>.Fail(
+                            "No cross assessment data found",
+                            null
+                        )
+                    );
+                }
+                var analyticsDto = _mapper.Map<List<AnalyticsDto?>>(analytics);
+                return Ok(SharedResponse<List<AnalyticsDto?>>.Success(analyticsDto, null));
             }
-            var analyticsDto = _mapper.Map<List<AnalyticsDto?>>(analytics);
-            return Ok(SharedResponse<List<AnalyticsDto?>>.Success(analyticsDto, null));
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<List<AnalyticsDto?>>.Fail(e.Message, null));
+            }
         }
 
         [HttpGet("assessment/{assessmentId}")]
@@ -85,16 +107,24 @@ namespace CustomEd.Assessment.Service.Controllers
             Guid classRoomId
         )
         {
-            var assessment = await _assessmentRepository.GetAsync(x => x.Id == assessmentId && x.Classroom.Id == classRoomId);
+            var assessment = await _assessmentRepository.GetAsync(x =>
+                x.Id == assessmentId && x.Classroom.Id == classRoomId
+            );
             if (assessment == null)
             {
                 return NotFound(SharedResponse<AnalyticsDto>.Fail("Assessment not found", null));
             }
-
-            var assessmentAnalytics = _mapper.Map<AnalyticsDto>(
-                await _analyticsService.PerformClassAnalysis(assessmentId)
-            );
-            return Ok(SharedResponse<AnalyticsDto>.Success(assessmentAnalytics, null));
+            try
+            {
+                var assessmentAnalytics = _mapper.Map<AnalyticsDto>(
+                    await _analyticsService.PerformClassAnalysis(assessmentId)
+                );
+                return Ok(SharedResponse<AnalyticsDto>.Success(assessmentAnalytics, null));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<AnalyticsDto>.Fail(e.Message, null));
+            }
         }
 
         [HttpPost("assessment")]
@@ -103,15 +133,21 @@ namespace CustomEd.Assessment.Service.Controllers
             Guid classRoomId
         )
         {
-            if(tags == null || tags.Count == 0)
+            if (tags == null || tags.Count == 0)
             {
                 return BadRequest(SharedResponse<AnalyticsDto>.Fail("Tags are required", null));
             }
-            var assessmentAnalytics = _mapper.Map<AnalyticsDto>(
-                await _analyticsService.PerformClassAnalysisByTag(tags!, classRoomId)
-            );
-            return Ok(SharedResponse<AnalyticsDto>.Success(assessmentAnalytics, null));
+            try
+            {
+                var assessmentAnalytics = _mapper.Map<AnalyticsDto>(
+                    await _analyticsService.PerformClassAnalysisByTag(tags!, classRoomId)
+                );
+                return Ok(SharedResponse<AnalyticsDto>.Success(assessmentAnalytics, null));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<AnalyticsDto>.Fail(e.Message, null));
+            }
         }
-
     }
 }

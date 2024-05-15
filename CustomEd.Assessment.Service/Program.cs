@@ -1,3 +1,4 @@
+using CustomEd.Assessment.Service.AnalyticsSevice;
 using CustomEd.Assessment.Service.Model;
 using CustomEd.Assessment.Service.Policies;
 using CustomEd.Shared.Data;
@@ -35,20 +36,21 @@ builder.Services.AddMongo()
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddAuth();
+builder.Services.AddScoped<AnalysisService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("CreatorOnlyPolicy", policy =>
+    options.AddPolicy("CreatorOnly", policy =>
         policy.Requirements.Add(new CreatorOnlyRequirement()));
-    options.AddPolicy("StudentOnlyPolicy", policy =>
+    options.AddPolicy("StudentOnly", policy =>
         policy.Requirements.Add(new StudentOnlyRequirement()));
-    options.AddPolicy("MemberOnlyPolicy", policy =>
+    options.AddPolicy("MemberOnly", policy =>
         policy.Requirements.Add(new MemberOnlyRequirement()));
 });
 builder.Services.AddScoped<IAuthorizationHandler, StudentOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, CreatorOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, MemberOnlyPolicy>();
-builder.Services.AddMassTransitWithRabbitMq();
+builder.Services.AddMassTransitWithRabbitMq("AssessmentServiceQueue");
 
 var app = builder.Build();
 

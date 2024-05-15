@@ -2,6 +2,7 @@ namespace CustomEd.Assessment.Service.DTOs;
 
 public class AnalyticsDto
 {
+    public Guid Id { get; set; }
     public string? Description { get; set; }
     public AssessmentDto Assessment { get; set; } = null!;
     public double TotalScore { get; set; }
@@ -25,4 +26,6 @@ public class AnalyticsDto
     public List<double> TopFiveScores { get; set; } = null!;
     public List<double> BottomFiveScores { get; set; } = null!;
     public Dictionary<string, double> MeanScorePerTopic { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

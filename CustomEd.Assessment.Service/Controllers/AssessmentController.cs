@@ -57,8 +57,9 @@ public class AssessmentController: ControllerBase
         {
             return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be created", new List<string> { "Classroom id does not match." }));
         }
-        
+
         var assessment = _mapper.Map<Model.Assessment>(createAssessmentDto);
+        assessment.Classroom = await _classroomRepository.GetAsync(classRoomId);
         await _assessmentRepository.CreateAsync(assessment);
         var assessmentDto  = _mapper.Map<AssessmentDto>(assessment);
         return Ok(SharedResponse<AssessmentDto>.Success(assessmentDto, "Assessment created successfully."));
@@ -143,6 +144,7 @@ public class AssessmentController: ControllerBase
             return BadRequest(SharedResponse<AssessmentDto>.Fail("Assessment could not be updated", new List<string> { "Classroom id does not match." }));
         }
         var assessment = _mapper.Map<Model.Assessment>(updateAssessmentDto);
+        assessment.Classroom = await _classroomRepository.GetAsync(classRoomId);
         await _assessmentRepository.UpdateAsync(assessment);
         var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
 
@@ -208,7 +210,9 @@ public class AssessmentController: ControllerBase
             var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             return BadRequest(SharedResponse<QuestionDto>.Fail("Question could not be created", errors));
         }
+        
         var question = _mapper.Map<Question>(createQuestionDto);
+        await _questionRepository.CreateAsync(question);
         for (int i = 0; i < question.Answers.Count; i++)
         {
             var answer = question.Answers[i];
@@ -223,10 +227,11 @@ public class AssessmentController: ControllerBase
             }
             await _answerRepository.CreateAsync(answer);
         }
-        
-        await _questionRepository.CreateAsync(question);
+
 
         var assessment = await _assessmentRepository.GetAsync(x => x.Id == createQuestionDto.AssessmentId && x.Classroom.Id == classRoomId);
+        if(assessment.Questions == null) assessment.Questions = new List<Question>();
+        
         assessment.Questions.Add(question);
         await _assessmentRepository.UpdateAsync(assessment);
 
@@ -253,6 +258,8 @@ public class AssessmentController: ControllerBase
             return NotFound(SharedResponse<QuestionDto>.Fail("Question not found", null));
         }
         var questionDto = _mapper.Map<QuestionDto>(question);
+        var answers = await _answerRepository.GetAllAsync(a => a.QuestionId == question.Id);
+        questionDto.Answers = _mapper.Map<List<AnswerDto>>(answers);
         return Ok(SharedResponse<QuestionDto>.Success(questionDto, "Question retrived successfully."));
     }
 
@@ -308,6 +315,15 @@ public class AssessmentController: ControllerBase
         }
         await _questionRepository.RemoveAsync(question);
         var questionDto = _mapper.Map<QuestionDto>(question);
+        var assessment = await _assessmentRepository.GetAsync(question.AssessmentId);
+        assessment.Questions = assessment.Questions.Where(q => q.Id != question.Id).ToList();
+        await _assessmentRepository.UpdateAsync(assessment);
+
+        var oldAnswers = await _answerRepository.GetAllAsync(a => a.QuestionId == question.Id);
+        foreach (var answer in oldAnswers)
+        {
+            await _answerRepository.RemoveAsync(answer);
+        }
         return Ok(SharedResponse<QuestionDto>.Success(questionDto, "Question deleted successfully."));
     }
 
@@ -315,7 +331,7 @@ public class AssessmentController: ControllerBase
     [Authorize(Policy = "StudentOnly")]
     public async Task<ActionResult<SharedResponse<SubmissionDto>>> CreateSubmission(Guid classRoomId, [FromBody] CreateSubmissionDto createSubmissionDto)
     {
-        var createSubmissionDtoValidator = new CreateSubmissionDtoValidator(_assessmentRepository, _answerRepository);
+        var createSubmissionDtoValidator = new CreateSubmissionDtoValidator(_assessmentRepository, _answerRepository, _submissionRepository);
         var validationResult = await createSubmissionDtoValidator.ValidateAsync(createSubmissionDto);
         if (!validationResult.IsValid)
         {
@@ -329,7 +345,7 @@ public class AssessmentController: ControllerBase
         {
             if (assessment == null || assessment.IsPublished == false)
             {
-                return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", null));
+                return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", new List<string>{"No such assessment is published"}));
             }
         }
 
@@ -338,6 +354,10 @@ public class AssessmentController: ControllerBase
         if (DateTime.UtcNow > assessment.Deadline)
         {
             return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", new List<string> { "Assessment is expired." }));
+        }
+        if (currentUserId != createSubmissionDto.StudentId)
+        {
+            return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be created", new List<string> { "You are not authorized to create this submission." }));
         }
         var submission = _mapper.Map<Submission>(createSubmissionDto);
         await _submissionRepository.CreateAsync(submission);
@@ -356,7 +376,7 @@ public class AssessmentController: ControllerBase
         }
         var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
         var creatorId = (await _classroomRepository.GetAsync(classRoomId)).CreatorId;
-        if (submission.StudentId != currentUserId || currentUserId != creatorId)
+        if (submission.StudentId != currentUserId && currentUserId != creatorId)
         {
             return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be retrived", new List<string> { "You are not authorized to view this submission." }));
         }
