@@ -150,25 +150,25 @@ namespace CustomEd.Assessment.Service.Controllers
 
         [HttpPost("assessment")]
         [Authorize(Policy = "CreatorOnly")]
-        public async Task<ActionResult<SharedResponse<AnalyticsDto>>> GetAssessmentByTag(
+        public async Task<ActionResult<SharedResponse<List<AnalyticsDto>>>> GetAssessmentByTag(
             [FromBody] List<string?> tags,
             Guid classRoomId
         )
         {
             if (tags == null || tags.Count == 0)
             {
-                return BadRequest(SharedResponse<AnalyticsDto>.Fail("Tags are required", null));
+                return BadRequest(SharedResponse<List<AnalyticsDto>>.Fail("Tags are required", null));
             }
             try
             {
-                var assessmentAnalytics = _mapper.Map<AnalyticsDto>(
+                var assessmentAnalytics = _mapper.Map<List<AnalyticsDto>>(
                     await _analyticsService.PerformClassAnalysisByTag(tags!, classRoomId)
                 );
-                return Ok(SharedResponse<AnalyticsDto>.Success(assessmentAnalytics, null));
+                return Ok(SharedResponse<List<AnalyticsDto>>.Success(assessmentAnalytics, null));
             }
             catch (Exception e)
             {
-                return BadRequest(SharedResponse<AnalyticsDto>.Fail(e.Message, null));
+                return BadRequest(SharedResponse<List<AnalyticsDto>>.Fail(e.Message, null));
             }
         }
     }
