@@ -10,11 +10,13 @@ using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CustomEd.Shared.JWT;
+using CustomEd.Shared.JWT.Interfaces;
 
 namespace CustomEd.Assessment.Service.Controllers
 {
     [Route("api/classroom/{classRoomId}/analytics")]
-    [Authorize(Policy = "CreatorOnly")]
+    
     [ApiController]
     public class AnalyticsController : ControllerBase
     {
@@ -23,6 +25,8 @@ namespace CustomEd.Assessment.Service.Controllers
         private readonly IGenericRepository<Answer> _answerRepository;
         private readonly IGenericRepository<Classroom> _classroomRepository;
         private readonly IGenericRepository<Submission> _submissionRepository;
+        private readonly IJwtService _jwtService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         private readonly AnalysisService _analyticsService;
 
@@ -33,7 +37,9 @@ namespace CustomEd.Assessment.Service.Controllers
             IMapper mapper,
             IGenericRepository<Classroom> classroomRepository,
             IGenericRepository<Submission> submissionRepository,
-            AnalysisService analyticsService
+            AnalysisService analyticsService,
+            IJwtService jwtService,
+            IHttpContextAccessor httpContextAccessor
         )
         {
             _assessmentRepository = assessmentRepository;
@@ -43,9 +49,12 @@ namespace CustomEd.Assessment.Service.Controllers
             _classroomRepository = classroomRepository;
             _submissionRepository = submissionRepository;
             _analyticsService = analyticsService;
+            _jwtService = jwtService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("cross-student/{studentId}")]
+        [Authorize(Policy = "MemberOnly")]
         public async Task<ActionResult<SharedResponse<List<CrossStudent?>>>> GetCrossStudent(
             Guid studentId,
             Guid classRoomId
@@ -53,6 +62,16 @@ namespace CustomEd.Assessment.Service.Controllers
         {
             try
             {
+                if (studentId == Guid.Empty)
+                {
+                    return BadRequest(SharedResponse<List<CrossStudent?>>.Fail("Student id is required", null));
+                }
+                var currentUserId  = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+                if (currentUserId != studentId)
+                {
+                    return Unauthorized(SharedResponse<List<CrossStudent?>>.Fail("Unauthorized", null));
+                }
+
                 var crossStudent = await _analyticsService.PerformCrossStudent(
                     studentId,
                     classRoomId
@@ -76,6 +95,7 @@ namespace CustomEd.Assessment.Service.Controllers
         }
 
         [HttpGet("cross-assessment")]
+        [Authorize(Policy = "CreatorOnly")]
         public async Task<ActionResult<SharedResponse<List<AnalyticsDto?>>>> GetCrossAssessment(
             Guid classRoomId
         )
@@ -102,6 +122,7 @@ namespace CustomEd.Assessment.Service.Controllers
         }
 
         [HttpGet("assessment/{assessmentId}")]
+        [Authorize(Policy = "CreatorOnly")]
         public async Task<ActionResult<SharedResponse<AnalyticsDto>>> GetAssessment(
             Guid assessmentId,
             Guid classRoomId
@@ -128,6 +149,7 @@ namespace CustomEd.Assessment.Service.Controllers
         }
 
         [HttpPost("assessment")]
+        [Authorize(Policy = "CreatorOnly")]
         public async Task<ActionResult<SharedResponse<AnalyticsDto>>> GetAssessmentByTag(
             [FromBody] List<string?> tags,
             Guid classRoomId
