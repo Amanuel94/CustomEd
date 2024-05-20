@@ -177,13 +177,24 @@ namespace CustomEd.User.Service.Controllers
                 );
             }
 
-            var passwordHash = _passwordHasher.HashPassword(studentDto.Password);
+            string passwordHash;
+            var oldUser = await _userRepository.GetAsync(studentDto.Id);
+            if(studentDto.Password == null)
+            {
+                passwordHash = oldUser.Password;
+            }
+            else
+            {
+                passwordHash = _passwordHasher.HashPassword(studentDto.Password);
+            }
+
+            // var passwordHash = _passwordHasher.HashPassword(studentDto.Password);
             studentDto.Password = passwordHash;
 
             var student = _mapper.Map<Model.Student>(studentDto);
             student.Role = Model.Role.Student;
 
-            var oldUser = await _userRepository.GetAsync(student.Id);
+            // var oldUser = await _userRepository.GetAsync(student.Id);
             student.IsVerified = oldUser.IsVerified;
 
             await _userRepository.UpdateAsync(student);

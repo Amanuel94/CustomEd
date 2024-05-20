@@ -103,13 +103,23 @@ namespace CustomEd.User.Service.Controllers
 
                 return Unauthorized(SharedResponse<TeacherDto>.Fail("Unauthorized to update user", null));
             }
-
-            var passwordHash = _passwordHasher.HashPassword(updateTeacherDto.Password);
+            
+            string passwordHash;
+            var oldUser = await _userRepository.GetAsync(updateTeacherDto.Id);
+            if(updateTeacherDto.Password == null)
+            {
+                passwordHash = oldUser.Password;
+            }
+            else
+            {
+                passwordHash = _passwordHasher.HashPassword(updateTeacherDto.Password);
+            }
+            
             updateTeacherDto.Password = passwordHash;
 
             var user = _mapper.Map<Model.Teacher>(updateTeacherDto);
             user.Role = Model.Role.Teacher;
-            var oldUser = await _userRepository.GetAsync(user.Id);
+            
             user.IsVerified = oldUser.IsVerified;
             await _userRepository.UpdateAsync(user);
 

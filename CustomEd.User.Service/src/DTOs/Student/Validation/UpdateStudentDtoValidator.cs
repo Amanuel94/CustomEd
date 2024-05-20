@@ -96,11 +96,11 @@ namespace CustomEd.User.Service.Validators
             //     .MaximumLength(200)
             //     .WithMessage("Image URL must not exceed 200 characters.");
 
-            RuleFor(dto => dto.Password)
-                .NotEmpty()
-                .WithMessage("Password is required.")
-                .MinimumLength(8)
-                .WithMessage("Password must be at least 8 characters long.");
+            // RuleFor(dto => dto.Password)
+            //     .NotEmpty()
+            //     .WithMessage("Password is required.")
+            //     .MinimumLength(8)
+            //     .WithMessage("Password must be at least 8 characters long.");
         }
     }
 }
