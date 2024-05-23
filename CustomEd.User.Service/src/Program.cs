@@ -7,6 +7,8 @@ using CustomEd.User.Service.PasswordService.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using CustomEd.Otp.Service.Email.Service;
+using CustomEd.User.Service.Email.Service;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +27,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton(builder.Configuration);
 builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection(nameof(MongoSettings)));
 builder.Services.Configure<ServiceSettings>(builder.Configuration.GetSection(nameof(ServiceSettings)));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton<IEmailService, EmailService>();
 
 // Register IConfiguration with the service collection
 builder.Services.AddSingleton(builder.Configuration);
