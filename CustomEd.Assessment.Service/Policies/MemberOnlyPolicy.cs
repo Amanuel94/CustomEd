@@ -2,6 +2,7 @@ using CustomEd.Assessment.Service.Model;
 using CustomEd.Shared.Data.Interfaces;
 using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;
+using CustomEd.Shared.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -30,9 +31,10 @@ namespace CustomEd.Assessment.Service.Policies
             var classroomId = Guid.Parse((string)_httpContextAccessor.HttpContext!.Request.RouteValues["classRoomId"]!);
             var identityProvider = new IdentityProvider(_httpContextAccessor, _jwtService);
             var userId = identityProvider.GetUserId();
+            var userRole = identityProvider.GetUserRole();
 
             var classroom = await _classRoomRepository.GetAsync(classroomId);
-            if (classroom.Members.Contains(userId) || classroom.CreatorId == userId)
+            if (classroom.Members.Contains(userId) || classroom.CreatorId == userId || userRole == Role.Admin)
             {
                 context.Succeed(requirement);
             }
