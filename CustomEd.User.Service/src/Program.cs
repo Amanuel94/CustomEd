@@ -29,6 +29,10 @@ builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection(nameo
 builder.Services.Configure<ServiceSettings>(builder.Configuration.GetSection(nameof(ServiceSettings)));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddHttpClient<UserApiClient>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:5126");
+        });
 
 // Register IConfiguration with the service collection
 builder.Services.AddSingleton(builder.Configuration);

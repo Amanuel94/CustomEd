@@ -27,7 +27,8 @@ namespace CustomEd.User.Service.Controllers
             IPasswordHasher passwordHasher,
             IJwtService jwtService,
             IPublishEndpoint publishEndpoint,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            UserApiClient userApiClient
         )
             : base(
                 userRepository,
@@ -35,7 +36,8 @@ namespace CustomEd.User.Service.Controllers
                 passwordHasher,
                 jwtService,
                 publishEndpoint,
-                httpContextAccessor
+                httpContextAccessor,
+                userApiClient
             ) { }
 
         [HttpGet("student-id")]
@@ -84,6 +86,23 @@ namespace CustomEd.User.Service.Controllers
                         validationResult.Errors.Select(e => e.ErrorMessage).ToList()
                     )
                 );
+            }
+
+            try{
+
+            var response = await _userApiClient.CheckEmailExistsAsync(studentDto.Email);
+            if(response == null)
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail("School Database is down.", null));
+            }
+            if(response!.userExisits == false || (response.Role != null && response.Role != Shared.Model.Role.Student))
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail("User email Does not exist in database.", null));
+            }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail(e.Message, null));
             }
             var passwordHash = _passwordHasher.HashPassword(studentDto.Password);
             studentDto.Password = passwordHash;

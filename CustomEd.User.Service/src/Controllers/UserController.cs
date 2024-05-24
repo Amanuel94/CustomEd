@@ -22,7 +22,8 @@ namespace CustomEd.User.Service.Controllers
         protected readonly IJwtService _jwtService;
         protected readonly IPublishEndpoint _publishEndpoint;
         protected readonly IHttpContextAccessor _httpContextAccessor;
-        public UserController(IGenericRepository<T> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor)
+        protected readonly UserApiClient _userApiClient;
+        public UserController(IGenericRepository<T> userRepository, IMapper mapper, IPasswordHasher passwordHasher, IJwtService jwtService, IPublishEndpoint publishEndpoint, IHttpContextAccessor httpContextAccessor, UserApiClient userApiClient)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -30,6 +31,7 @@ namespace CustomEd.User.Service.Controllers
             _jwtService = jwtService;
             _publishEndpoint = publishEndpoint;
             _httpContextAccessor = httpContextAccessor;
+            _userApiClient = userApiClient;
         }
     
         [HttpGet]
