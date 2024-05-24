@@ -1,3 +1,5 @@
+using CustomEd.ISchoolDatabase.Dto;
+using CustomEd.Shared.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -101,10 +103,41 @@ namespace CustomEd.ISchoolDatabase.Controllers
         }
 
         [HttpGet("emails/{email}")]
-        public ActionResult<bool> CheckEmailExists(string email)
+        public ActionResult<SchoolResonseDto> CheckEmailExists(string email)
         {
-            bool emailExists = StudentEmails.Contains(email) || TeacherEmails.Contains(email);
-            return Ok(emailExists);
+            bool studentEmailExists = StudentEmails.Contains(email);
+            bool teacherEmailExists = TeacherEmails.Contains(email);
+            if (studentEmailExists)
+            {
+                var response = new SchoolResonseDto
+                {
+                    userExisits = true,
+                    Role = Role.Student
+                };
+                
+                return Ok(response);
+            }
+            else if (teacherEmailExists)
+            {
+                var response = new SchoolResonseDto
+                {
+                    userExisits = true,
+                    Role = Role.Teacher
+                };
+                
+                return Ok(response);
+            }
+            else
+            {
+                var response = new SchoolResonseDto
+                {
+                    userExisits = false,
+                    Role = null
+                };
+                
+                return Ok(response);
+
+            }
         }
     }
 
