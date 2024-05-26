@@ -40,7 +40,10 @@ namespace CustomEd.ISchoolDatabase.Controllers
             "sebastian.baker@example.org",
             "zoe.mitchell@example.com",
             "jack.carter@example.net",
-            "layla.phillips@example.org"
+            "layla.phillips@example.org",
+            "admasterefe00@gmail.com",
+            "admas.terefe@a2sv.org"
+
         };
 
         private readonly List<string> TeacherEmails = new List<string>()
@@ -49,7 +52,8 @@ namespace CustomEd.ISchoolDatabase.Controllers
             "jane.doe@example.net",
             "mary.jane@example.org",
             "paul.smith@example.com",
-            "linda.jones@example.net"
+            "linda.jones@example.net",
+            "aadmasterefe00@gmail.com"
         };
 
 
