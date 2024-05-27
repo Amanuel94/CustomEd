@@ -180,6 +180,10 @@ namespace CustomEd.Classroom.Service.Controllers
             var students = await _studentRepository.GetAllAsync(x => x.Section == batchDto.Section && x.Year == batchDto.Year && x.Department == batchDto.Department);
 
             var classroom = await _classroomRepository.GetAsync(batchDto.ClassRoomId);
+            if(classroom.Members == null)
+            {
+                classroom.Members = new List<Student>();
+            }
             
             foreach (var student in students)
             {
