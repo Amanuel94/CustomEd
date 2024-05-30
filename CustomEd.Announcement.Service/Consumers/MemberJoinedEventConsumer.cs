@@ -22,7 +22,7 @@ namespace CustomEd.Announcement.Service.Consumers
             var classroom = await _classRoomRepository.GetAsync(context.Message.ClassroomId);
             if(classroom.MemberIds == null)
             {
-                classroom.MemberIds = new List<string>();
+                classroom.MemberIds = new List<Guid>();
             }
             classroom.MemberIds.Add(context.Message.StudentId);
             Console.WriteLine("Here is the count of the members in the classroom:");

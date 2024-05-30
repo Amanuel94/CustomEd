@@ -45,7 +45,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddScoped<IAuthorizationHandler, MemberOnlyPolicy>();
 builder.Services.AddScoped<IAuthorizationHandler, CreatorOnlyPolicy>();
-builder.Services.AddMassTransitWithRabbitMq("AnnouncementServiceQueue");
+builder.Services.AddMassTransitWithRabbitMq("AnnouncementServiceQueue_error");
 
 
 
