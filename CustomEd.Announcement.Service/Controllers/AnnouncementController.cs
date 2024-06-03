@@ -203,5 +203,29 @@ namespace CustomEd.Announcement.Service.Controllers
 
             
         }
+
+        [HttpGet("{classRoomId}/announcements/{id}/attachments/{fileName}")]
+        [Authorize(policy:"MemberOnlyPolicy")]
+        public async Task<IActionResult> GetAttachment(string classRoomId, Guid id, string fileName)
+        {
+            var announcement = await _announcementRepository.GetAsync(id);
+            if (announcement == null)
+            {
+                return NotFound(SharedResponse<AnnouncementDto>.Fail("Announcement not found", null));
+            }
+            if (announcement.ClassRoom.Id.ToString() != classRoomId)
+            {
+                return BadRequest(SharedResponse<AnnouncementDto>.Fail("Cannot access attachment in a different classroom", null));
+            }
+            string directoryPath = Path.Combine("Uploads", announcement.Id.ToString());
+            string filePath = Path.Combine(directoryPath, fileName + ".pdf");
+            if (!Directory.Exists(directoryPath) || !System.IO.File.Exists(filePath))
+            {
+                return NotFound(SharedResponse<AnnouncementDto>.Fail("Attachment not found", null));
+            }
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/pdf", fileName + ".pdf");
+        }
+    
     }
 }
