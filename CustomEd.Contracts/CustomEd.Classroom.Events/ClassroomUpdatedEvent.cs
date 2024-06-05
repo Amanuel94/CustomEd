@@ -7,5 +7,5 @@ public class ClassroomUpdatedEvent
     public string? Description { get; set; }
     public List<string>? Students { get; set; }
     public Guid CreatorId { get; set; }
-    public List<Guid> MemberIds { get; set; } = new List<Guid>();
+    public List<Guid> MemberIds { get; set; }
 }

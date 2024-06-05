@@ -187,6 +187,10 @@ namespace CustomEd.Classroom.Service.Controllers
             
             foreach (var student in students)
             {
+                if(classroom.Members.Any(x => x.Id == student.Id))
+                {
+                    continue;
+                }
                 classroom.Members.Add(student);
 
             }
@@ -259,6 +263,10 @@ namespace CustomEd.Classroom.Service.Controllers
             if (classroom.Members != null)
             {
                 classroom.Members = classroom.Members.Where(x => x.Id != studentId).ToList();
+            }
+            else
+            {
+                classroom.Members = new List<Student>();
             }
             await _classroomRepository.UpdateAsync(classroom);
             var memberLeftEvent = new MemberLeftEvent { ClassroomId = classroomId, StudentId = studentId };

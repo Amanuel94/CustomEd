@@ -39,11 +39,9 @@ public class MappingProfile : Profile
         CreateMap<Analytics, AnalyticsDto>()
             .ForMember(dest => dest.Assessment, opt => opt.MapFrom(src => src.Assessment));
         
-        CreateMap<ClassroomCreatedEvent, Classroom>().ReverseMap();
-        CreateMap<ClassroomUpdatedEvent, Classroom>().ReverseMap();
+        CreateMap<ClassroomCreatedEvent, Classroom>().ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.MemberIds));
+        CreateMap<ClassroomUpdatedEvent, Classroom>().ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.MemberIds));
 
-        
-        
             
 
       

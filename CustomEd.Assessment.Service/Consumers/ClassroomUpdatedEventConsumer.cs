@@ -23,6 +23,8 @@ namespace CustomEd.Assessment.Service.Consumers
         {
             var classroom = _mapper.Map<Classroom>(context.Message);
             await _classRoomRepository.UpdateAsync(classroom);
+            Console.WriteLine("here");
+            Console.WriteLine(context.Message.MemberIds.Count);
             var assessments = await _assessmentRepository.GetAllAsync(a => a.Classroom.Id == classroom.Id);
             foreach (var assessment in assessments)
             {
