@@ -78,6 +78,6 @@ public class UpdateQuestionDtoValidator : AbstractValidator<UpdateQuestionDto>
                 }
             ).WithMessage("Assessment deadline has passed.");
 
-        RuleFor(x => x.Tags).NotEmpty().WithMessage("At least one tag is required.");
+        // RuleFor(x => x.Tags).NotEmpty().WithMessage("At least one tag is required.");
     }
 }
