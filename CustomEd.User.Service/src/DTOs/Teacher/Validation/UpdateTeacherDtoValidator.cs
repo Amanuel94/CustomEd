@@ -58,21 +58,21 @@ namespace CustomEd.User.Service.Validators
                 .LessThan(DateOnly.Parse(DateTime.UtcNow.ToString("yyyy-MM-dd")))
                 .WithMessage("Join date cannot be later than today.");
 
-            RuleFor(dto => dto.Email)
-                .NotEmpty()
-                .WithMessage("Email is required.")
-                .MaximumLength(100)
-                .WithMessage("Email must not exceed 100 characters.")
-                .EmailAddress()
-                .WithMessage("Invalid email format.");
+            // RuleFor(dto => dto.Email)
+            //     .NotEmpty()
+            //     .WithMessage("Email is required.")
+            //     .MaximumLength(100)
+            //     .WithMessage("Email must not exceed 100 characters.")
+            //     .EmailAddress()
+            //     .WithMessage("Invalid email format.");
             
-            RuleFor(dto => new { dto.Email, dto.Id })
-                .MustAsync(async (data, cancellation) =>
-                {
-                    var student = await _teacherRepository.GetAsync(s => s.Email == data.Email && s.Id != data.Id);
-                    return student == null;
-                })
-                .WithMessage("Email already exists.");
+            // RuleFor(dto => new { dto.Email, dto.Id })
+            //     .MustAsync(async (data, cancellation) =>
+            //     {
+            //         var student = await _teacherRepository.GetAsync(s => s.Email == data.Email && s.Id != data.Id);
+            //         return student == null;
+            //     })
+            //     .WithMessage("Email already exists.");
             
             // RuleFor(dto => dto.ImageUrl)
             //     .MaximumLength(200)

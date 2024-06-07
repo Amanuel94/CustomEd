@@ -209,6 +209,7 @@ namespace CustomEd.User.Service.Controllers
 
             // var passwordHash = _passwordHasher.HashPassword(studentDto.Password);
             studentDto.Password = passwordHash;
+            studentDto.Email = oldUser.Email;
 
             var student = _mapper.Map<Model.Student>(studentDto);
             student.Role = Model.Role.Student;
@@ -217,7 +218,7 @@ namespace CustomEd.User.Service.Controllers
             student.IsVerified = oldUser.IsVerified;
 
             await _userRepository.UpdateAsync(student);
-            var studentUpdatedEvent = _mapper.Map<StudentCreatedEvent>(student);
+            var studentUpdatedEvent = _mapper.Map<StudentUpdatedEvent>(student);
             if (student.IsVerified == true)
             {
                 await _publishEndpoint.Publish(studentUpdatedEvent);

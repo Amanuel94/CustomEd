@@ -185,6 +185,7 @@ namespace CustomEd.User.Service.Controllers
             }
 
             updateTeacherDto.Password = passwordHash;
+            updateTeacherDto.Email = oldUser.Email;
 
             var user = _mapper.Map<Model.Teacher>(updateTeacherDto);
             user.Role = Model.Role.Teacher;
