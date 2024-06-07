@@ -42,7 +42,11 @@ namespace CustomEd.ISchoolDatabase.Controllers
             "jack.carter@example.net",
             "layla.phillips@example.org",
             "admasterefe00@gmail.com",
-            "admas.terefe@a2sv.org"
+            "admas.terefe@a2sv.org",
+            "amanueltewodros94@gmail.com",
+            "frehiwotlema07@gmail.com",
+            "admas.terefe@aau.edu.et",
+            "tarikterefe9@gmailcom"
 
         };
 
