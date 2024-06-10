@@ -23,14 +23,19 @@ namespace CustomEd.Forum.Service.Policies
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, MemberOnlyRequirement requirement)
         {
-            Guid classroomId;
-            Guid.TryParse((string)_httpContextAccessor.HttpContext!.Request.RouteValues["classRoomId"]!, out classroomId);
+            var classroomId = Guid.Parse((string)_httpContextAccessor.HttpContext!.Request.RouteValues["classRoomId"]!);
             var identityProvider = new IdentityProvider(_httpContextAccessor, _jwtService);
             var userId = identityProvider.GetUserId();
             var userRole = identityProvider.GetUserRole();
 
             var classroom = await _classRoomRepository.GetAsync(classroomId);
-            if (classroom.Members.Select(u=>u.Id).Contains(userId) || classroom.Creator.Id == userId || userRole == Role.Admin)
+            if(classroom == null)
+            {
+                context.Fail();
+                return;
+            }
+            
+            if ((classroom.Members != null && (classroom.Members.Select(x => x.Id)).ToList().Contains(userId)) || classroom.Creator.Id == userId || userRole == Role.Admin)
             {
                 context.Succeed(requirement);
             }
