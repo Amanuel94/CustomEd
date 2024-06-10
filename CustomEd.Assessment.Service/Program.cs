@@ -22,7 +22,11 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -38,6 +42,7 @@ builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddAuth();
 builder.Services.AddScoped<AnalysisService>();
 builder.Services.AddAutoMapper(typeof(Program));
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("CreatorOnly", policy =>
