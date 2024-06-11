@@ -240,7 +240,7 @@ public class ForumHub : Hub<IForumClient>
         // }
         // var creator = group.Creator.Id;
         // await Clients.User(_connections[creator]).ReceiveMessage(_mapper.Map<MessageDto>(message));
-        await _messageRepository.CreateAsync(message);
+        // await _messageRepository.CreateAsync(message);
         await Clients
             .Group(messageDto.ClassroomId.ToString())
             .ReceiveMessage(_mapper.Map<MessageDto>(message));
