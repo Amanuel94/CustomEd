@@ -162,9 +162,16 @@ public class ForumHub : Hub<IForumClient>
 
     public async Task SendMessage(CreateMessageDto messageDto)
     {
+        // if(messageDto != null)
+        // {
+        //     Console.WriteLine("Message is not null");
+        //     Console.WriteLine(messageDto.SenderRole);
+        //     return;
+        // }
         var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
-        messageDto.SenderRole = (Role)userRole!;
+        // Console.WriteLine("Role: " + userRole);
         // var message = _mapper.Map<Message>(messageDto);
+        
         Message message;
         if (messageDto.SenderRole == Role.Student)
         {

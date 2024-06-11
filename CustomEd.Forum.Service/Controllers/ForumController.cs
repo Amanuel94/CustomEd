@@ -51,7 +51,7 @@ namespace CustomEd.Forum.Service.Controllers
             _forumHub = forumHub;
         }
 
-        private static async Task SendMessageToGroup(Message message)
+        private static async Task SendMessageToGroup(CreateMessageDto message)
         {
             try
             {
@@ -97,8 +97,19 @@ namespace CustomEd.Forum.Service.Controllers
 
                 var message = _mapper.Map<Message>(createMessageDto);
                 message.Sender = await _studentRepository.GetAsync(currentUserId);
+                if(message.Sender == null)
+                {
+                    return BadRequest(
+                        SharedResponse<MessageDto>.Fail(
+                            null,
+                            new List<string> { "Student not found." }
+                        )
+                    );
+                }
+                message.Classroom = await _classroomRepository.GetAsync(classRoomId);
+
                 await _messageRepository.CreateAsync(message);
-                await SendMessageToGroup(message);
+                await SendMessageToGroup(createMessageDto);
 
                 var messageDto = _mapper.Map<MessageDto>(message);
                 return Ok(
@@ -125,10 +136,22 @@ namespace CustomEd.Forum.Service.Controllers
                 createMessageDto.SenderId = currentUserId;
                 createMessageDto.ClassroomId = classRoomId;
 
+
                 var message = _mapper.Map<Message>(createMessageDto);
                 message.Sender = await _teacherRepository.GetAsync(currentUserId);
+                message.Classroom = await _classroomRepository.GetAsync(classRoomId);
+                if(message.Sender == null)
+                {
+                    return BadRequest(
+                        SharedResponse<MessageDto>.Fail(
+                            null,
+                            new List<string> { "Teacher not found." }
+                        )
+                    );
+                }
+
                 await _messageRepository.CreateAsync(message);
-                await SendMessageToGroup(message);
+                await SendMessageToGroup(createMessageDto);
 
                 var messageDto = _mapper.Map<MessageDto>(message);
                 return Ok(

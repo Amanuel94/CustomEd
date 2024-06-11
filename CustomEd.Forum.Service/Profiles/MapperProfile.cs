@@ -68,6 +68,13 @@ namespace CustomEd.Forum.Service.Profiles
             CreateMap<CreateMessageDto, Message>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content));
 
+            CreateMap<Message, CreateMessageDto>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.SenderId, opt => opt.MapFrom(src => src.Sender.Id))
+                .ForMember(dest => dest.SenderRole, opt => opt.MapFrom(src => src.Sender.Role))
+                .ForMember(dest => dest.ThreadParent, opt => opt.MapFrom(src => src.ThreadParent))
+                .ForMember(dest => dest.ClassroomId, opt => opt.MapFrom(src => src.Classroom!.Id));
+
             CreateMap<UpdateMessageDto, Message>()
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content));
             
