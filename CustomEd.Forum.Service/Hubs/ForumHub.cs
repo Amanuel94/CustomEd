@@ -55,6 +55,8 @@ public class ForumHub : Hub<IForumClient>
         {
             var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
             var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
+            Console.WriteLine(currentUserId);
+            Console.WriteLine(userRole);
             if (userRole == Role.Teacher)
             {
                 var user = await _teacherRepository.GetAsync(currentUserId);
