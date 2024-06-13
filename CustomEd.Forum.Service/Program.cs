@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using CustomEd.Forum.Service.Model;
 using CustomEd.Forum.Service.Policies;
+using CustomEd.Forum.Service.Hubs;
 using CustomEd.Shared.Data;
 using CustomEd.Shared.JWT;
 using CustomEd.Shared.JWT.Interfaces;

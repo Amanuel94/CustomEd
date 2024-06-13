@@ -12,12 +12,13 @@ using Microsoft.AspNetCore.SignalR;
 using MassTransit;
 using CustomEd.Contracts.Notification.Events;
 
+namespace CustomEd.Forum.Service.Hubs;
 public class ForumHub : Hub<IForumClient>
 {
     private readonly ConcurrentDictionary<Guid, string> _connections =
         new ConcurrentDictionary<Guid, string>();
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IGenericRepository<Classroom> _classroomRepository;
+    private readonly IGenericRepository<Model.Classroom> _classroomRepository;
     private readonly IGenericRepository<Teacher> _teacherRepository;
     private readonly IGenericRepository<Student> _studentRepository;
     private readonly IMapper _mapper;
@@ -28,7 +29,7 @@ public class ForumHub : Hub<IForumClient>
     public ForumHub(
         ConcurrentDictionary<Guid, string> connections,
         IHttpContextAccessor httpContextAccessor,
-        IGenericRepository<Classroom> classroomRepository,
+        IGenericRepository<Model.Classroom> classroomRepository,
         IGenericRepository<Teacher> teacherRepository,
         IGenericRepository<Student> studentRepository,
         IGenericRepository<Message> messageRepository,
@@ -51,11 +52,24 @@ public class ForumHub : Hub<IForumClient>
     public override async Task OnConnectedAsync()
     {
         Console.WriteLine($"ConnectionId {Context.ConnectionId} is connecting. . .");
+        foreach (var item in await _studentRepository.GetAllAsync())
+        {
+         Console.WriteLine(item.Id);   
+        }
+        foreach (var item in await _classroomRepository.GetAllAsync())
+        {
+            foreach (var st in item.Members)
+            {
+             Console.WriteLine(st.Id);      
+            }
+         
+        }
+        Console.WriteLine("-----------------------");
         try
         {
             var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
             var userRole = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserRole();
-            Console.WriteLine(currentUserId);
+            Console.WriteLine($"line 58: {currentUserId}");
             Console.WriteLine(userRole);
             if (userRole == Role.Teacher)
             {
@@ -177,7 +191,10 @@ public class ForumHub : Hub<IForumClient>
         Message message;
         if (messageDto.SenderRole == Role.Student)
         {
-            var validator = new CreateMessageDtoValidator<Student>(_studentRepository, _classroomRepository, _messageRepository);        
+            var validator = new CreateMessageDtoValidator<Student>(_studentRepository, _classroomRepository, _messageRepository); 
+            Console.WriteLine(messageDto.SenderId);
+            Console.WriteLine(messageDto.ClassroomId);
+            Console.WriteLine(messageDto.Content);       
             var result = await validator.ValidateAsync(messageDto);
             if (!result.IsValid)
             {

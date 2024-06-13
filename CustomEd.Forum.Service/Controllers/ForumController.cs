@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using CustomEd.Forum.Service.Hubs;
 
 namespace CustomEd.Forum.Service.Controllers
 {
