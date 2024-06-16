@@ -171,5 +171,35 @@ namespace CustomEd.Assessment.Service.Controllers
                 return BadRequest(SharedResponse<List<AnalyticsDto>>.Fail(e.Message, null));
             }
         }
+
+        [HttpPost("grade")]
+        [Authorize(Policy = "CreatorOnly")]
+        public async Task<ActionResult<SharedResponse<bool>>> GradeStudents(
+            [FromBody] List<Guid> studentIds,
+            Guid assessmentId,
+            Guid classRoomId
+        )
+        {
+            if (studentIds == null || studentIds.Count == 0)
+            {
+                return BadRequest(SharedResponse<bool>.Fail("Student ids are required", null));
+            }
+            try
+            {
+                var result = await _analyticsService.GradeStudents(assessmentId);
+                if (result)
+                {
+                    return Ok(SharedResponse<bool>.Success(true, null));
+                }
+                else
+                {
+                    return NotFound(SharedResponse<bool>.Fail("Failed to grade students", null));
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(SharedResponse<bool>.Fail(e.Message, null));
+            }
+        }
     }
 }

@@ -146,6 +146,43 @@ namespace CustomEd.Assessment.Service.AnalyticsSevice
             return newAnalytics;
         }
 
+        
+        public async Task<bool> GradeStudents(Guid assessmentId)
+        {
+            var submissions = await _submissionRepository.GetAllAsync(s =>
+                s.AssessmentId == assessmentId
+            );
+
+            foreach (var submission in submissions)
+            {
+                var score = await CalculateScore(submission);
+                submission.Score = score;
+                await _submissionRepository.UpdateAsync(submission);
+            }
+
+            return true;
+        }
+
+        private async Task<double> CalculateScore(Submission submission)
+        {
+
+            var totalScore = 0.0;
+            foreach (var answerId in submission.Answers)
+            {
+                var answer = await _answerRepository.GetAsync(answerId);
+                var question = await _questionRepository.GetAsync(answer.QuestionId);
+                if (question != null)
+                {
+                    if (answer.IsCorrect)
+                    {
+                        totalScore += question.Weight;
+                    }
+                }
+            }
+
+            return totalScore;
+        }
+
         public async Task<List<Analytics?>> PerformCrossAssessment(Guid classroomId)
         {
             var assessments = await _assessmentRepository.GetAllAsync(a =>
