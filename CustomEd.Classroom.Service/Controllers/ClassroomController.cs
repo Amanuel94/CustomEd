@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using CusotmEd.Classroom.Service.Clients;
 using CustomEd.Classroom.Service.DTOs;
 using CustomEd.Classroom.Service.DTOs.Validation;
 using CustomEd.Classroom.Service.Model;
@@ -29,8 +30,9 @@ namespace CustomEd.Classroom.Service.Controllers
         private readonly IJwtService _jwtService;
         private readonly IMapper _mapper;
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ClassroomApiClient _classroomApiClient;
 
-        public ClassroomController(IGenericRepository<Model.Classroom> classroomRepository, IGenericRepository<Teacher> teacherRepository, IGenericRepository<Student> studentRepository, IHttpContextAccessor httpContextAccessor, IJwtService jwtService, IMapper mapper, IPublishEndpoint publishEndpoint)
+        public ClassroomController(IGenericRepository<Model.Classroom> classroomRepository, IGenericRepository<Teacher> teacherRepository, IGenericRepository<Student> studentRepository, IHttpContextAccessor httpContextAccessor, IJwtService jwtService, IMapper mapper, IPublishEndpoint publishEndpoint, ClassroomApiClient classroomApiClient)
         {
             _classroomRepository = classroomRepository;
             _teacherRepository = teacherRepository;
@@ -39,6 +41,7 @@ namespace CustomEd.Classroom.Service.Controllers
             _jwtService = jwtService;
             _mapper = mapper;
             _publishEndpoint = publishEndpoint;
+            _classroomApiClient = classroomApiClient;
         }
 
         [Authorize]
@@ -114,6 +117,12 @@ namespace CustomEd.Classroom.Service.Controllers
                 return BadRequest(SharedResponse<ClassroomDto>.Fail("Invalid input", validationResult.Errors.Select(x => x.ErrorMessage).ToList()));
             }
             var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+            var teacherEmail = (await _teacherRepository.GetAsync(currentUserId)).Email;
+            var isTaught = await _classroomApiClient.CheckCourseTaughtByTeacher(teacherEmail, createClassroomDto.CourseNo);
+            if (!isTaught)
+            {
+                return BadRequest(SharedResponse<ClassroomDto>.Fail("You are not authorized to create a classroom for this course", null));
+            }
             if(createClassroomDto.CreatorId != currentUserId)
             {
                 return Unauthorized(SharedResponse<ClassroomDto>.Fail("You are not authorized to create a classroom on behalf of another teacher", null));

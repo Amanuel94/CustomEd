@@ -134,6 +134,19 @@ namespace CustomEd.ISchoolDatabase.Controllers
 
         }
 
+        [HttpGet("teachers/courses/{email}")]
+        public ActionResult<bool> CheckCourseTaughtByTeacher(string email, string courseNumber)
+        {
+            var teacher = TeacherList.FirstOrDefault(t => t.TeacherEmail == email);
+            if (teacher != null)
+            {
+                bool isTaught = teacher.CourseNumbers.Contains(courseNumber);
+                return Ok(isTaught);
+            }
+
+            return NotFound("Teacher not found.");
+        }
+
         [HttpDelete("students/emails")]
         public ActionResult RemoveStudentEmail([FromBody] string email)
         {

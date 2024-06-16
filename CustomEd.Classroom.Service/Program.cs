@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CusotmEd.Classroom.Service.Clients;
 using CustomEd.Classroom.Service.Model;
 using CustomEd.Shared.Data;
 using CustomEd.Shared.JWT;
@@ -18,6 +19,11 @@ builder.Services.AddCors(options =>
                        .AllowAnyHeader();
             });
     });
+builder.Services.AddHttpClient<ClassroomApiClient>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:5126");
+        });
+
 
 // Add services to the container.
 
