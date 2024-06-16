@@ -71,6 +71,15 @@ namespace CustomEd.User.Service.Controllers
             );
         }
 
+        // [HttpGet("debug/{email}")]
+        // public async Task<ActionResult<List<string>>> Debugg(string email)
+        // {
+        //     var studentInfo = await _userApiClient.FetchStudentProfile(email);
+        //     Console.WriteLine(studentInfo[0]);
+        //     return Ok((studentInfo));
+            
+        // }
+
         [HttpPost]
         public async Task<ActionResult<SharedResponse<Model.Student>>> CreateUser(
             [FromBody] CreateStudentDto studentDto
@@ -89,14 +98,17 @@ namespace CustomEd.User.Service.Controllers
             }
 
             try{
-
+            
+            Console.WriteLine(studentDto.Email);
             var response = await _userApiClient.CheckEmailExistsAsync(studentDto.Email);
+            // Console.WriteLine($"bool : {response.UserExists}");
             if(response == null)
             {
                 return BadRequest(SharedResponse<Model.Student>.Fail("School Database is down.", null));
             }
-            if(response!.userExisits == false || (response.Role != null && response.Role != Shared.Model.Role.Student))
+            if(response!.UserExists == false || (response.Role != null && response.Role != Shared.Model.Role.Student))
             {
+                Console.WriteLine(response.UserExists);
                 return BadRequest(SharedResponse<Model.Student>.Fail("User email Does not exist in database.", null));
             }
             }
@@ -104,6 +116,25 @@ namespace CustomEd.User.Service.Controllers
             {
                 return BadRequest(SharedResponse<Model.Student>.Fail(e.Message, null));
             }
+            var studentInfo = await _userApiClient.FetchStudentProfile(studentDto.Email);
+            if(studentInfo == null)
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail("School Database is down.", null));
+            }
+            Console.WriteLine(studentInfo);
+            if(studentInfo.Count == 0)
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail("User email Does not exist in database.", null));
+            }
+            Department studentDep = (Department)int.Parse(studentInfo[1]);
+            int Year = int.Parse(studentInfo[2]);
+            string Section = studentInfo[3];  
+            
+            if(studentDep != studentDto.Department || Year != studentDto.Year || Section != studentDto.Section)
+            {
+                return BadRequest(SharedResponse<Model.Student>.Fail("User email Does not match with the provided information.", null));
+            }
+
             var passwordHash = _passwordHasher.HashPassword(studentDto.Password);
             studentDto.Password = passwordHash;
 

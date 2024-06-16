@@ -1,9 +1,14 @@
 using CustomEd.Shared.Model;
+using System.Text.Json.Serialization;
 
 namespace CustomEd.User.Dto;
 
-public class SchoolResonseDto
+
+public class SchoolResponseDto
 {
-    public bool userExisits{get; set;}
-    public Role? Role {get; set;}
+    [JsonPropertyName("userExists")]
+    public bool UserExists { get; set; }
+
+    [JsonPropertyName("role")]
+    public Role Role { get; set; }
 }

@@ -80,7 +80,7 @@ namespace CustomEd.User.Service.Controllers
             {
                 var response = await _userApiClient.CheckEmailExistsAsync(createTeacherDto.Email);
                 if (
-                    response!.userExisits == false
+                    response!.UserExists == false
                     || (response.Role != null && response.Role != Shared.Model.Role.Teacher)
                 )
                 {
@@ -95,6 +95,21 @@ namespace CustomEd.User.Service.Controllers
             catch (Exception e)
             {
                 return BadRequest(SharedResponse<Model.Teacher>.Fail(e.Message, null));
+            }
+
+            var teacherInfo = await _userApiClient.FetchTeacherProfile(createTeacherDto.Email);
+            if (teacherInfo == null)
+            {
+                return BadRequest(
+                    SharedResponse<Model.Teacher>.Fail("User email Does not exist in database.", null)
+                );
+            }
+            Department teacherDep = (Department)int.Parse(teacherInfo[1]); 
+            if (teacherDep != createTeacherDto.Department)
+            {
+                return BadRequest(
+                    SharedResponse<Model.Teacher>.Fail("Incorrect department", null)
+                );
             }
 
             var passwordHash = _passwordHasher.HashPassword(createTeacherDto.Password);
