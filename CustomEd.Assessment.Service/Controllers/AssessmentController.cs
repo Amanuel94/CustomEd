@@ -418,5 +418,23 @@ public class AssessmentController: ControllerBase
 
 
 
-
+    [HttpGet("submission/student/{studentId}/assessment/{assessmentId}")]
+    [Authorize(Policy = "MemberOnly")]
+    public async Task<ActionResult<SharedResponse<SubmissionDto>>> GetSubmissionByStudentAndAssessment(Guid studentId, Guid assessmentId)
+    {
+        var submission = await _submissionRepository.GetAsync(s => s.StudentId == studentId && s.AssessmentId == assessmentId);
+        if (submission == null)
+        {
+            return NotFound(SharedResponse<SubmissionDto>.Fail("Submission not found", null));
+        }
+        var currentUserId = new IdentityProvider(_httpContextAccessor, _jwtService).GetUserId();
+        var assessment = await _assessmentRepository.GetAsync(assessmentId);
+        var creatorId = (await _classroomRepository.GetAsync(assessment.Classroom.Id)).CreatorId;
+        if (submission.StudentId != currentUserId && currentUserId != creatorId)
+        {
+            return BadRequest(SharedResponse<SubmissionDto>.Fail("Submission could not be retrieved", new List<string> { "You are not authorized to view this submission." }));
+        }
+        var submissionDto = _mapper.Map<SubmissionDto>(submission);
+        return Ok(SharedResponse<SubmissionDto>.Success(submissionDto, "Submission retrieved successfully."));
+    }
 }
