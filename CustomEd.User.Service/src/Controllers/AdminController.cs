@@ -144,12 +144,12 @@ public class AdminController : ControllerBase
         [FromBody] LoginRequestDto request
     )
     {
-        var user = await _adminRepository.GetAsync(x => x.Email == request.Email && x.IsVerified == true );
+        var user = await _adminRepository.GetAsync(x => x.Email == request.Email);
             if(user == null)
             {
                 return BadRequest(SharedResponse<UserDto>.Fail("User not found or not verified", null));
             }
-            if(!_passwordHasher.VerifyPassword(request.Password, user.Password))
+            if(request.Password != user.Password)
             {
                 return BadRequest(SharedResponse<bool>.Fail("Incorrect Password", null));
             }
