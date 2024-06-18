@@ -41,6 +41,7 @@ builder.Services.AddMongo();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddPersistence<Student>("Student");
 builder.Services.AddPersistence<Teacher>("Teacher");
+builder.Services.AddPersistence<Admin>("Admin");
 builder.Services.AddPersistence<Otp>("Otp");
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
