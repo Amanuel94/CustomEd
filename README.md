@@ -3,7 +3,7 @@
 ## Overview
 **CustomEd** is a modular education management system designed to streamline various operations within educational institutions using microservices. It supports features like announcements, assessments, classroom management, and real-time notifications.
 
-[Next.Js Frontend Codebase](https://github.com/Son-OfAnton/custom-ed).
+[Next.Js Frontend Codebase](https://github.com/Son-OfAnton/custom-ed)
 
 ## Features
 - **Announcement Service:** Manage announcements and updates.
