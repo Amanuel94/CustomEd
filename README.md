@@ -21,7 +21,7 @@ The system is built on a **microservices architecture** using **C#**. Each servi
 
 ## Folder Structure
 
-Every service is built with the following design pattern:
+Most services are built with the following design pattern:
 
 ```
 CustomEd.[Service Name].Service
