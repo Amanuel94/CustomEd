@@ -64,3 +64,17 @@ Details of the entire folder structure is found in [here](./folder-structure.md)
    docker-compose up --build
    ```
 5. Access the services through their configured endpoints.
+
+## Sample Screenshots
+
+### Landing Page
+![Landing page](/screenshots/photo_1_2024-11-04_13-57-38.jpg?raw=True)
+
+![Landing_page2](/screenshots/photo_2_2024-11-04_13-57-38.jpg?raw=True)
+
+### Assessments
+![Assessment](/screenshots/photo_8_2024-11-04_13-57-38.jpg?raw=True)
+
+### Analytics
+![Analytics](/screenshots/photo_10_2024-11-04_13-57-38.jpg?raw=True)
+
